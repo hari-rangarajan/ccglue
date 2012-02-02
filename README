@@ -1,0 +1,35 @@
+ccglue is intended to be the interfacing app between cscope and ctags. It
+can generate cross-reference tag files that can be interfaced with the Vim
+CCTree plugin (http://www.vim.org/scripts/script.php?script_id=2368).
+
+Currently supported languages: C
+
+Some babble:
+Cscope and ctags are semantic analysis tools that excel in specific areas,
+i.e., ctags has excellent tag support for a huge number of languages, while
+cscope's flex scanner provides excellent semantic analysis.  However, what is
+left lacking is usually context for the semantic analysis. Context allows you
+to generate more data that can be used for more purposes, i.e., case in hand
+call-graph, code completion, and error detection. This tool attempts to analyze
+the cscope generated data using additional context from ctags data. 
+
+More features and language support to follow.
+
+You can find the respective tools here:
+cscope -- cscope.sourceforge.net
+ctags -- ctags.sourceforge.net
+
+
+BUILDING and INSTALLING
+****************************************
+The package with configured with auto-tools.  The typical installation process
+should work on most systems. Requires a reasonably up-to-date version of GLib.
+
+	./configure
+	make
+	make install
+
+Options to the configure script are up to you.  For details, run:
+
+	./configure --help
+(There is none now though)

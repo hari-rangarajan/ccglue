@@ -1,0 +1,4 @@
+Feb 1, 2012, hariranga@sourceforge.users.net
+
+* Initial commit to migrate C to C++
+* TODO: Add more C++ness to code, remove Glib dependency and move to STL
