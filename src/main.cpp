@@ -33,8 +33,8 @@ int main (int argc, char **argv)
     /* Default values. */
     opts.silent = 0;
     opts.verbose = 0;
-    opts.output_file = "ccglue.out";
-    opts.cscope_dbs = "cscope.out";
+    opts.output_file = (char *) "ccglue.out";
+    opts.cscope_dbs = (char *) "cscope.out";
 
     /* Parse our arguments; every option seen by parse_opt will
        be reflected in arguments. */

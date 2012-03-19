@@ -1,6 +1,5 @@
 #include <string.h>
 #include "tagfilerdr.h"
-#include "seqfile.h"
 #include "debug.h"
 
 tag_file_rdr::tag_file_rdr ()

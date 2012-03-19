@@ -24,44 +24,36 @@
 #include "sym_mgr.h"
 #include "digraph.h"
 #include "debug.h"
-#include <string.h>
-#include "seqfile.h"
-#include <glib/gstring.h>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 sym_table::sym_table ()
 {
     m_monotonic_id = 0;
-    m_hash_names = NULL;
-    m_array_sym = NULL;
 }
 
 RC_t sym_table::init ()
 {
-    if ((m_hash_names = g_hash_table_new(g_str_hash, g_str_equal)) 
-            == NULL) {
-        return RC_FAILURE;
-    }
-    if ((m_array_sym = g_array_new(FALSE, FALSE,
-                    sizeof(sym_entry *))) == NULL) {
-        /* need to free */
-        return RC_FAILURE;
-    }
     return RC_SUCCESS;
 }
 
 void sym_table::destroy()
 {
+#if 0
     g_hash_table_foreach(m_hash_names, 
             sym_name_data_free_iterator, NULL);
+#endif
 }
 
 sym_table::~sym_table()
 {
     destroy();
-    g_array_free(m_array_sym, TRUE);
-    g_hash_table_destroy(m_hash_names);
+   // g_array_free(m_array_sym, TRUE);
+   // g_hash_table_destroy(m_hash_names);
 }
 
+#if 0
 void sym_table::sym_name_data_free_iterator (gpointer key,
         gpointer value, gpointer user_data)
 {
@@ -69,6 +61,7 @@ void sym_table::sym_name_data_free_iterator (gpointer key,
     //((sym_entry *) value)->destroy();
     delete (sym_entry *) value;
 }
+#endif
 
 
 uint32 sym_table::get_new_id ()
@@ -78,123 +71,94 @@ uint32 sym_table::get_new_id ()
 
 
 
-gint sym_table_array_entry_cmp (gconstpointer a, gconstpointer b)
+bool sym_table::add_sym (sym_entry* a_sym_entry)
 {
-    sym_entry	*sym1 = (sym_entry *) (*(uint32 *)a);
-    sym_entry	*sym2 = (sym_entry *) (*(uint32 *)b);
+    debug::log("Adding %s on ???\n", a_sym_entry->get_n().c_str());
 
-    return strcmp(sym1->get_uid_str()->str, sym2->get_uid_str()->str);
+    //m_hash_names.insert(std::tr1::unordered_map<const char *,sym_entry *>::
+      //      value_type(a_sym_entry->get_n().c_str(), a_sym_entry));
+    m_hash_names[a_sym_entry->get_n()] = a_sym_entry;
+    m_array_sym.push_back(a_sym_entry);
+
+    return true;
 }
 
-sym_entry* sym_table::add_sym (const char *sym_name)
-{
-    sym_entry *a_sym_entry = new sym_entry;
-    a_sym_entry->init();
-    a_sym_entry->set(sym_name, get_new_id());
-
-    debug::log("Adding %s on %ld\n", a_sym_entry->get_n()->str, 
-            a_sym_entry->get_uid());
-
-    g_hash_table_insert(m_hash_names, (gpointer)g_strdup(sym_name),
-            (gpointer)a_sym_entry);
-
-    /* g_list_insert_sorted(table->list_sym, (gpointer)sym_entry, 
-       sym_table_list_insert_cmp);
-       */
-    g_array_append_val(m_array_sym, a_sym_entry);
-    return a_sym_entry;
-}
-
-sym_entry* sym_table::add_ext (const char *sym_name)
-{
-    sym_entry *a_sym_entry = lookup(sym_name);
-    if (a_sym_entry == NULL) {
-        //DEBUG_PRINTF(DBG_VERBOSE, "Could not find %s \n", sym_name);
-        a_sym_entry = add_sym(sym_name);
-    } 
-    return a_sym_entry;
-}
 
 sym_entry* sym_table::lookup (const char *sym_name)
 {
-	sym_entry *a_sym_entry;
+        hash_map_sym::const_iterator sym_entries_iterator;
 
-	a_sym_entry = (sym_entry *) g_hash_table_lookup(m_hash_names, 
-			(gpointer) sym_name);
-	return a_sym_entry;
+	sym_entries_iterator = m_hash_names.find(sym_name);
+        
+        if (sym_entries_iterator == m_hash_names.end()) {
+            return NULL;
+        } 
+	return (sym_entries_iterator->second);
 }
 
 
 void sym_table::write_xref_tag_file (const char* fname)
 {
-    tag_file_writer *writer = new tag_file_writer(fname);
-
-    writer->write_xref_tag_header();
+    tag_file_writer writer(fname);
+    
+    writer.write_xref_tag_header();
     write_syms_as_tags_to_file(writer);
-    delete writer;
 }
 
-void sym_table::write_syms_as_tags_to_file (tag_file_writer *file)
-{
-    int i;
 
-    g_array_sort(m_array_sym, sym_table_array_entry_cmp);
-    for (i = 0; i < m_array_sym->len; i++) {
-        file->write_sym_as_tag( 
-                g_array_index(m_array_sym, sym_entry*, i));
+bool sym_entry_cmp (sym_entry *sym1, sym_entry *sym2)
+{
+    return (sym1->m_n < sym2->m_n);
+}
+
+void sym_table::assign_unique_ids_to_symbols ()
+{
+    std::vector<sym_entry *>::iterator   iter;
+
+    for (iter = m_array_sym.begin(); iter != m_array_sym.end(); iter++) {
+        (*iter)->m_uid = get_new_id();
+    }
+}
+ 
+void sym_table::prepare_to_serialize ()
+{
+    sort(m_array_sym.begin(), m_array_sym.end(), sym_entry_cmp);
+    assign_unique_ids_to_symbols();
+}
+
+void sym_table::write_syms_as_tags_to_file (tag_file_writer& file)
+{
+    std::vector<sym_entry *>::iterator   iter;
+    
+    prepare_to_serialize();
+    
+    /* TODO: change to a STL idiom */
+    for (iter = m_array_sym.begin(); iter != m_array_sym.end(); iter++) {
+        file.write_sym_as_tag(*iter); 
     }
 }
 
 // Sym entry routines
 
-sym_entry::sym_entry ()
+sym_entry::sym_entry (const char *name):
+    m_n(name), m_uid(0)
 {
-    /* init strings */
-   m_n = (NULL);
-   m_p = (NULL);
-   m_c = (NULL);
-   m_uid_str = (NULL);
+    /* default inits */
 }
 
 sym_entry::~sym_entry ()
 {
-    destroy();
 }
 
-RC_t sym_entry::init ()
-{
-    /* allocate strings */
-    m_n = g_string_new(NULL);
-    m_p = g_string_new(NULL);
-    m_c = g_string_new(NULL);
-    m_uid_str = g_string_new(NULL);
-
-    return RC_SUCCESS;
-}
-
-RC_t sym_entry::destroy ()
-{
-    g_string_free(m_n, TRUE);
-    g_string_free(m_p, TRUE);
-    g_string_free(m_c, TRUE);
-    g_string_free(m_uid_str, TRUE);
-}
-
-RC_t sym_entry::set (const char *sym_name, uint32 uid)
-{
-    g_string_printf(m_n, "%s", sym_name);
-    m_uid =  uid;
-    g_string_printf(m_uid_str, "%ld", m_uid);
-}
 
 void sym_entry::mark_p (sym_entry *p) 
 {
-	g_string_append_printf(m_p, "%ld,", p->get_uid());
+    m_p.push_back(p);
 }
 
 void sym_entry::mark_c (sym_entry *c) 
 {
-	g_string_append_printf(m_c, "%ld,", c->get_uid());
+    m_c.push_back(c);
 }
 							
 void sym_table::mark_xref (sym_entry *in_func, sym_entry *ref_func) 

@@ -33,31 +33,20 @@ seq_file_t **cscope_db_rdr_get_seq_file(cscope_db_rdr_t *rdr) {
 }
 */
 
-cscope_db_rdr::cscope_db_rdr()
+cscope_db_rdr::cscope_db_rdr ()
+    //(const char *cscope_db_name)
+   // : m_cscope_db(cscope_db_name)
 {
     m_in_func = NULL;
     m_in_file = NULL;
     m_in_macro = NULL;
     m_in_enum = NULL;
-    //m_cscope_db = NULL;
-
 }
 
-RC_t cscope_db_rdr::open (const char *cscope_db_name)
-{
-    //m_cscope_db = new seq_file;
-    //return m_cscope_db->reader_create(cscope_db_name);
-}
-
-void cscope_db_rdr::destroy ()
-{
-    //m_cscope_db->close();
-}
 
 cscope_db_rdr::~cscope_db_rdr()
 {
-    destroy();
-    //delete m_cscope_db;
+    //m_cscope_db.close();
 }
         
 void cscope_db_rdr::set_scan_action (int action)
@@ -65,7 +54,7 @@ void cscope_db_rdr::set_scan_action (int action)
     m_action_type = action;
 }
 
-void cscope_db_rdr::process_line (sym_table *a_sym_table, uchar* line)
+void cscope_db_rdr::process_line (sym_table *a_sym_table, char* line)
 {
     switch(m_action_type) {
     case ACTION_LOAD_SYMS:
@@ -79,15 +68,27 @@ void cscope_db_rdr::process_line (sym_table *a_sym_table, uchar* line)
     }
 }
 
-void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, uchar* line)
+sym_entry* cscope_db_rdr::create_sym_entry_or_lookup (sym_table *a_sym_table, 
+                    const char* sym_text)
 {
-    char        temp[MAX_TEMP_BUFFER];
-    sym_entry   *ref_func;
-    sym_entry   *ref_file;
-    sym_entry   *untagged_sym;
+    sym_entry* a_sym = a_sym_table->lookup(sym_text);
+
+    if (a_sym == NULL) {
+        a_sym = new sym_entry(sym_text);
+        a_sym_table->add_sym(a_sym);
+    }
+    return a_sym;
+}
+
+void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, char* line)
+{
+    char     *  temp;
+    sym_entry* ref_func;
+    sym_entry* ref_file;
+    sym_entry* untagged_sym;
 
     if (line[0] !='\t') {
-        snprintf(temp, MAX_TEMP_BUFFER, "%s", &line[0]);
+        temp = &line[0];
         untagged_sym = a_sym_table->lookup(temp);
         if (untagged_sym == NULL) {
             return;
@@ -98,11 +99,11 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, uchar* line)
             a_sym_table->mark_xref(m_in_func, untagged_sym);
         }
     } else if (line[0] == '\t') {
-        snprintf(temp, MAX_TEMP_BUFFER, "%s", &line[2]);
+        temp = &line[2];
         if (m_in_macro) {
             switch (line[1]) {
             case '`':
-                ref_func = a_sym_table->add_ext(temp);
+                ref_func = create_sym_entry_or_lookup(a_sym_table, temp);
                 if (m_in_macro && ref_func) {
                     a_sym_table->mark_xref(m_in_macro, ref_func);
                 }
@@ -115,7 +116,7 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, uchar* line)
         } else if (m_in_func) {
             switch (line[1]) {
             case '`':
-                ref_func = a_sym_table->add_ext(temp);
+                ref_func = create_sym_entry_or_lookup(a_sym_table, temp);
                 if (m_in_func && ref_func) {
                     a_sym_table->mark_xref(m_in_func, ref_func);
                 }
@@ -138,7 +139,7 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, uchar* line)
                 m_in_macro = a_sym_table->lookup(temp);
                 break;
             case '~':
-                ref_file = a_sym_table->add_ext(&temp[1]);
+                ref_file = create_sym_entry_or_lookup(a_sym_table,&temp[1]);
                 if (ref_file && m_in_file) {
                     a_sym_table->mark_xref(m_in_file, ref_file);
                 }
@@ -156,18 +157,18 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, uchar* line)
 }
 
 
-void cscope_db_rdr::build_sym_from_line (sym_table *a_sym_table, uchar* line)
+void cscope_db_rdr::build_sym_from_line (sym_table *a_sym_table, char* line)
 {
-    char         temp[1024];
+    char        *temp;
     sym_entry   *ref_func;
     sym_entry   *ref_file;
 
     if (line[0] =='\t') {
-        snprintf(temp, MAX_TEMP_BUFFER, "%s", &line[2]);
+        temp =  &line[2];
         if (m_in_enum) {
             switch (line[1]) {
             case 'm':
-                (void) a_sym_table->add_ext(temp);
+                (void) create_sym_entry_or_lookup(a_sym_table, temp);
                 return;
             default:
                 m_in_enum = NULL;
@@ -177,26 +178,26 @@ void cscope_db_rdr::build_sym_from_line (sym_table *a_sym_table, uchar* line)
         /* fall-through path or otherwise */
         switch (line[1]) {
         case '$': 
-            (void) a_sym_table->add_ext(temp);
+            (void) create_sym_entry_or_lookup(a_sym_table, temp);
             break;
         case '#': 
-            (void) a_sym_table->add_ext(temp);
+            (void) create_sym_entry_or_lookup(a_sym_table, temp);
             break;
         case '@':
             if (temp[0] != '\0') {
-                (void) a_sym_table->add_ext(temp);
+                (void) create_sym_entry_or_lookup(a_sym_table, temp);
             }
             break;
         case 'e':
-            m_in_enum = a_sym_table->add_ext(temp);
+            m_in_enum = create_sym_entry_or_lookup(a_sym_table, temp);
             break;
         case 'g':
-            (void) a_sym_table->add_ext(temp);
+            (void) create_sym_entry_or_lookup(a_sym_table, temp);
             break;
 #if 0
             /* typedefs are not that useful to track */
         case 't':
-            (void) a_sym_table->add_ext(temp);
+            (void) create_sym_entry_or_lookup(a_sym_table, temp);
             break;
 #endif
         default:
@@ -206,14 +207,16 @@ void cscope_db_rdr::build_sym_from_line (sym_table *a_sym_table, uchar* line)
 }
 
 
-void cscope_db_rdr::build_xref (sym_table *a_sym_table, uchar* line)
+void cscope_db_rdr::build_xref (sym_table *a_sym_table, char* line)
 {
-    while (m_cscope_db->read_till_newline(line,
-                sizeof(line)) != RC_FAILURE) {
+#if 0
+    while (m_cscope_db.getline(line,
+                sizeof(line))) {
         if (line[0] =='\t') {
             process_line(a_sym_table, line);
         }
     }
+#endif
 }
 
 

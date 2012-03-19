@@ -2,7 +2,6 @@
 #define TAGFILERDR_H
 
 #include "typedefs.h"
-#include "seqfile.h"
 
 typedef int tag_type_t;
 

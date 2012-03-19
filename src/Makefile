@@ -46,9 +46,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ccglue_OBJECTS = options.$(OBJEXT) cscoperdr.$(OBJEXT) \
-	seqfile.$(OBJEXT) sym_mgr.$(OBJEXT) digraph.$(OBJEXT) \
-	main.$(OBJEXT) c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) \
-	debug.$(OBJEXT)
+	sym_mgr.$(OBJEXT) digraph.$(OBJEXT) main.$(OBJEXT) \
+	c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) debug.$(OBJEXT)
 ccglue_OBJECTS = $(am_ccglue_OBJECTS)
 am__DEPENDENCIES_1 =
 ccglue_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -78,11 +77,11 @@ AUTOMAKE = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run automake-1
 AWK = mawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2
+CFLAGS = -g 
 CPPFLAGS = 
 CXX = g++
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g -O2
+CXXFLAGS = -g
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -162,7 +161,7 @@ target_alias =
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
-ccglue_SOURCES = options.c cscoperdr.cpp seqfile.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp debug.cpp
+ccglue_SOURCES = options.c cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp debug.cpp
 AM_CFLAGS = $(GLIB_CFLAGS)
 ccglue_LDADD = $(GLIB_LIBS)
 INCLUDES = `pkg-config --cflags glib-2.0`
@@ -253,7 +252,6 @@ include ./$(DEPDIR)/debug.Po
 include ./$(DEPDIR)/digraph.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/options.Po
-include ./$(DEPDIR)/seqfile.Po
 include ./$(DEPDIR)/sym_mgr.Po
 include ./$(DEPDIR)/tag_file_writer.Po
 

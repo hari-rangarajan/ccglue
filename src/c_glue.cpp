@@ -23,42 +23,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fstream>
 #include "typedefs.h"
-#include "seqfile.h"
 #include "sym_mgr.h"
 #include "cscoperdr.h"
-#include "tagfilerdr.h"
 
 RC_t process_files_with_reader (generic_db_rdr *reader, sym_table* a_sym_table, 
         const char* db_files)
 {
-    uchar		 line[1024];
+    char		 line[1024];
     int			 idx = 0;
     int                  lines = 0;
     char                *db_file_name;
     char                 db_filenames_var[512];
-    seq_file            *db_file;
+    std::ifstream             db_file;
 
     /* need to copy before we try tokenizing */
     strcpy(db_filenames_var, db_files);
     db_file_name = strtok(db_filenames_var, ",");
 
-    db_file = new seq_file;
-
     while (db_file_name != NULL) {
-        if (db_file->reader_create(db_file_name) == RC_SUCCESS) {
-            while (db_file->read_till_newline(line, 
-                        sizeof(line)) != RC_FAILURE) {
-                reader->process_line(a_sym_table, line);
-                lines++;
-            }
-            db_file->close();
-        } else {
-            return RC_FAILURE;
+        db_file.open(db_file_name);
+        while (db_file.getline(line, 
+                    sizeof(line))) {
+            reader->process_line(a_sym_table, line);
+            lines++;
         }
+        db_file.close();
         db_file_name = strtok(NULL, ",");
     }
-    delete db_file;
 
     return RC_SUCCESS;
 }

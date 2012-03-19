@@ -2,14 +2,14 @@
 #define TAG_FILE_WRITER_H
 
 #include "sym_mgr.h"
-#include "seqfile.h"
 #include "typedefs.h"
+#include <fstream>
 
 class sym_entry;
 
 class tag_file_writer {
     protected:
-        seq_file *tagfile;
+        std::ofstream tagfile;
     public:
         tag_file_writer(const char* filename);
         ~tag_file_writer();

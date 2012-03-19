@@ -46,9 +46,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ccglue_OBJECTS = options.$(OBJEXT) cscoperdr.$(OBJEXT) \
-	seqfile.$(OBJEXT) sym_mgr.$(OBJEXT) digraph.$(OBJEXT) \
-	main.$(OBJEXT) c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) \
-	debug.$(OBJEXT)
+	sym_mgr.$(OBJEXT) digraph.$(OBJEXT) main.$(OBJEXT) \
+	c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) debug.$(OBJEXT)
 ccglue_OBJECTS = $(am_ccglue_OBJECTS)
 am__DEPENDENCIES_1 =
 ccglue_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -162,7 +161,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ccglue_SOURCES = options.c cscoperdr.cpp seqfile.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp debug.cpp
+ccglue_SOURCES = options.c cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp debug.cpp
 AM_CFLAGS = $(GLIB_CFLAGS)
 ccglue_LDADD = $(GLIB_LIBS)
 INCLUDES = `pkg-config --cflags glib-2.0`
@@ -253,7 +252,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/digraph.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/options.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/seqfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sym_mgr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tag_file_writer.Po@am__quote@
 
