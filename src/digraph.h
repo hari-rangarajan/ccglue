@@ -95,7 +95,7 @@ protected:
     std::streambuf&         s_buf;
     virtual traits_type::int_type overflow( int_type c = traits_type::eof() );
 public:
-    digraph_compress_buf(std::streambuf& buf):
+    digraph_uncompress_buf(std::streambuf& buf):
         s_buf(buf){
             map = digraph_maps::get_letter_map();
         };

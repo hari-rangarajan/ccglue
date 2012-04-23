@@ -191,7 +191,7 @@ target_alias =
 top_build_prefix = 
 top_builddir = .
 top_srcdir = .
-SUBDIRS = src doc
+SUBDIRS = src doc 3rdparty/tclap-1.21/config/
 EXTRA_DIST = configure
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
