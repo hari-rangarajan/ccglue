@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include "indexed_fstream.h"
 
 sym_table::sym_table ()
 {
@@ -100,9 +101,10 @@ sym_entry* sym_table::lookup (const char *sym_name)
 void sym_table::write_xref_tag_file (const char* fname)
 {
     tag_file_writer writer(fname);
+    indexed_ofstream idx_ofs("ccglue.idx");
     
     writer.write_xref_tag_header();
-    write_syms_as_tags_to_file(writer);
+    write_syms_as_tags_to_file_with_idx(writer, idx_ofs);
 }
 
 
@@ -110,6 +112,21 @@ bool sym_entry_cmp (sym_entry *sym1, sym_entry *sym2)
 {
     return (sym1->m_n < sym2->m_n);
 }
+
+void sym_table::uncompress_symbol_names ()
+{
+    std::vector<sym_entry *>::iterator   iter;
+    std::stringstream        tmp_sstream;
+    digraph_uncompress_buf  uncompress_buf(*(tmp_sstream.rdbuf()),
+                                             digraph_maps::get_letter_uncompress_map());
+    std::istream            uncompress_stream(&uncompress_buf);
+    
+    for (iter = m_array_sym.begin(); iter != m_array_sym.end(); iter++) {
+        tmp_sstream.str((*iter)->get_n());
+        uncompress_stream >> (*iter)->m_n;
+    }
+}
+
 
 void sym_table::assign_unique_ids_to_symbols ()
 {
@@ -122,6 +139,7 @@ void sym_table::assign_unique_ids_to_symbols ()
  
 void sym_table::prepare_to_serialize ()
 {
+    uncompress_symbol_names();
     sort(m_array_sym.begin(), m_array_sym.end(), sym_entry_cmp);
     assign_unique_ids_to_symbols();
 }
@@ -136,6 +154,42 @@ void sym_table::write_syms_as_tags_to_file (tag_file_writer& file)
     for (iter = m_array_sym.begin(); iter != m_array_sym.end(); iter++) {
         file.write_sym_as_tag(*iter); 
     }
+}
+
+void sym_table::write_syms_as_tags_to_file_with_idx (tag_file_writer& file, 
+        indexed_ofstream& idx_file)
+{
+    index_record_t      rec;
+    std::streampos      fpos;
+    std::streampos      idx_fpos_start, idx_fpos_end;
+    std::vector<sym_entry *>::iterator   iter;
+    std::ostream    fbs(idx_file.rdbuf());
+    
+    prepare_to_serialize();
+    
+    /* TODO: change to a STL idiom */
+    for (iter = m_array_sym.begin(); iter != m_array_sym.end(); iter++) {
+       
+        rec.record_start = file.get_file_pos();
+        file.write_sym_as_tag(*iter); 
+        rec.size = file.get_file_pos() - rec.record_start;
+        
+        idx_file.begin_record();
+        idx_fpos_start = fbs.tellp();
+        fbs.seekp(sizeof(index_record_t), std::ios::cur);
+        fbs << (*iter)->get_n();
+        idx_fpos_end = fbs.tellp();
+        fbs.seekp(idx_fpos_start, std::ios::beg);
+        fbs.write(reinterpret_cast<char *>(&rec), sizeof(index_record_t));
+        fbs.seekp(idx_fpos_end, std::ios::beg);
+        std::cout << "writing " << (*iter)->get_n() << "size " <<
+            idx_fpos_end - idx_fpos_start << 
+            " start " << idx_fpos_start <<
+            " end " << idx_fpos_end << std::endl;
+        idx_file.end_record();
+    }
+    idx_file.write_index_to_file();
+    idx_file.close();
 }
 
 // Sym entry routines
@@ -159,6 +213,11 @@ void sym_entry::mark_p (sym_entry *p)
 void sym_entry::mark_c (sym_entry *c) 
 {
     m_c.push_back(c);
+}
+
+void sym_entry::mark_f (sym_entry *f) 
+{
+    m_f.push_back(f);
 }
 							
 void sym_table::mark_xref (sym_entry *in_func, sym_entry *ref_func) 

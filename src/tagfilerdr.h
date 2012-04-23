@@ -5,7 +5,7 @@
 #include <istream>
 #include <sstream>
 #include <iterator>
-#include "../digraph.h"
+#include "digraph.h"
 #include <string>
 
 #define MAX_SIZE_LINE_NUMBER   256
@@ -19,7 +19,9 @@ typedef unsigned char   tag_type_t;
 
 class tag {
     public:
+        tag () {};
         tag (std::streambuf* is_it);
+        decode_from_stream (std::streambuf* s_buf);
         void dump (std::ostream& os);
     protected:
         tag_type_t                      m_type;
@@ -76,6 +78,11 @@ void tag::decode_compressed_list (std::streambuf* s_buf,
 }
 
 tag::tag (std::streambuf* s_buf)
+{
+    decode_from_stream(s_buf);
+}
+
+tag::decode_from_stream (std::streambuf* s_buf)
 {
     std::stringstream   oss;
     std::istreambuf_iterator<char> is_it(s_buf);

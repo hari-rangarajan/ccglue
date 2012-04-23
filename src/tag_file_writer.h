@@ -16,6 +16,7 @@ class tag_file_writer {
         void destroy();
         void write_xref_tag_header();
         void write_sym_as_tag(sym_entry *a_sym_entry);
+        std::streampos get_file_pos ();
 };
 
 #endif

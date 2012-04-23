@@ -82,8 +82,7 @@ class bounded_streambuf:public std::streambuf {
                 return traits_type::eof();
             }
             char c = m_buf->sbumpc();
-            std::cout << "gettingnext " << (int)((unsigned char) c) << "[" <<
-                c << "]" << std::endl;
+            //std::cout << "gettingnext " << (int)((unsigned char) c) << "[" << c << "]" << std::endl;
             return c;
         };
         traits_type::int_type underflow() {
@@ -91,8 +90,7 @@ class bounded_streambuf:public std::streambuf {
                 return traits_type::eof();
             }
             char c = m_buf->sgetc();
-            std::cout << "gettingb " << (int)((unsigned char) c) <<   "[" << c << "]" 
-                << std::endl;
+            //std::cout << "gettingb " << (int)((unsigned char) c) <<   "[" << c << "]" << std::endl;
             return c;
         };
         std::streampos seekoff(std::streamoff off, 

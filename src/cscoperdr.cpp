@@ -162,6 +162,7 @@ void cscope_db_rdr::build_sym_from_line (sym_table *a_sym_table, char* line)
     char        *temp;
     sym_entry   *ref_func;
     sym_entry   *ref_file;
+    sym_entry   *ref;
 
     if (line[0] =='\t') {
         temp =  &line[2];
@@ -178,21 +179,25 @@ void cscope_db_rdr::build_sym_from_line (sym_table *a_sym_table, char* line)
         /* fall-through path or otherwise */
         switch (line[1]) {
         case '$': 
-            (void) create_sym_entry_or_lookup(a_sym_table, temp);
+            ref = create_sym_entry_or_lookup(a_sym_table, temp);
+            ref->mark_f(m_in_file);
             break;
         case '#': 
-            (void) create_sym_entry_or_lookup(a_sym_table, temp);
+            ref = create_sym_entry_or_lookup(a_sym_table, temp);
+            ref->mark_f(m_in_file);
             break;
         case '@':
             if (temp[0] != '\0') {
-                (void) create_sym_entry_or_lookup(a_sym_table, temp);
+                m_in_file = create_sym_entry_or_lookup(a_sym_table, temp);
             }
             break;
         case 'e':
             m_in_enum = create_sym_entry_or_lookup(a_sym_table, temp);
+            m_in_enum->mark_f(m_in_file);
             break;
         case 'g':
-            (void) create_sym_entry_or_lookup(a_sym_table, temp);
+            ref = create_sym_entry_or_lookup(a_sym_table, temp);
+            ref->mark_f(m_in_file);
             break;
 #if 0
             /* typedefs are not that useful to track */
