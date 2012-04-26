@@ -35,9 +35,14 @@ subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	depcomp install-sh missing
+	config/depcomp config/install-sh config/missing depcomp \
+	install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/config/ac_cxx_have_long_long.m4 \
+	$(top_srcdir)/config/ac_cxx_have_sstream.m4 \
+	$(top_srcdir)/config/ac_cxx_have_strstream.m4 \
+	$(top_srcdir)/config/ac_cxx_namespaces.m4 \
+	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -99,17 +104,15 @@ DIST_ARCHIVES = $(distdir).tar.gz
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run aclocal-1.11
-AMTAR = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run tar
-AUTOCONF = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run automake-1.11
+ACLOCAL = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run aclocal-1.11
+AMTAR = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run tar
+AUTOCONF = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run automake-1.11
 AWK = mawk
-CC = gcc
-CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2
 CPPFLAGS = 
 CXX = g++
+CXXCPP = g++ -E
 CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -g -O2
 CYGPATH_W = echo
@@ -118,9 +121,9 @@ DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
+EGREP = /bin/grep -E
 EXEEXT = 
-GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include  
-GLIB_LIBS = -lglib-2.0  
+GREP = /bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -130,7 +133,7 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 PACKAGE = 
@@ -141,9 +144,6 @@ PACKAGE_TARNAME =
 PACKAGE_URL = 
 PACKAGE_VERSION = 
 PATH_SEPARATOR = :
-PKG_CONFIG = /usr/bin/pkg-config
-PKG_CONFIG_LIBDIR = 
-PKG_CONFIG_PATH = 
 SET_MAKE = 
 SHELL = /bin/bash
 STRIP = 
@@ -152,7 +152,6 @@ abs_builddir = /home/tux/myprojects/ccglue/git-ver
 abs_srcdir = /home/tux/myprojects/ccglue/git-ver
 abs_top_builddir = /home/tux/myprojects/ccglue/git-ver
 abs_top_srcdir = /home/tux/myprojects/ccglue/git-ver
-ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
 am__leading_dot = .
@@ -171,7 +170,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/tux/myprojects/ccglue/git-ver/install-sh
+install_sh = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -191,8 +190,9 @@ target_alias =
 top_build_prefix = 
 top_builddir = .
 top_srcdir = .
-SUBDIRS = src doc 3rdparty/tclap-1.21/config/
-EXTRA_DIST = configure
+SUBDIRS = src doc include/tclap
+ACLOCAL_AMFLAGS = -I config
+EXTRA_DIST = configure reconf
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

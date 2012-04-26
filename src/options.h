@@ -23,22 +23,19 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
+#include <string>
+#include <vector>
 #include "typedefs.h"
 
-typedef struct ccglue_opts {
-    char* cscope_dbs;
-    char* tag_files;
-    char* output_file;
-    int    silent;
-    int    verbose;
-} ccglue_opts_t;
+class ccglue_opts {
+    public:
+        std::vector<std::string> cscope_dbs;
+        std::vector<std::string> tag_files;
+        std::string              output_file;
+        bool                     silent;
+        bool                     verbose;
+};
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    int ccglue_parse_command_line_options (int argc,
-                          char **argv, ccglue_opts_t* opts);
-#ifdef __cplusplus
-}
-#endif
+int ccglue_parse_command_line_options (int argc,
+        char **argv, ccglue_opts* opts);
 #endif

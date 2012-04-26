@@ -3,3 +3,8 @@ Feb 1, 2012, Hari Rangarajan
 * Migrating code from C to C++.     
 * Starting off fresh code-base in git
 
+April 26, 2012, Hari Rangarajan (hariranga@sourceforge.users.net)
+* Release independent of Glib and Argp
+* Uses the TCLAP library for command-line parsing (packaged)
+* Cross-compilable to any platform with a C++ compiler
+

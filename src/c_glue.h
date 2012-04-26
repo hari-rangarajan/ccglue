@@ -25,8 +25,8 @@
 #include "typedefs.h"
 #include "sym_mgr.h"
 
-extern RC_t process_cscope_files_to_build_sym_table (sym_table* ,
-        char* cscope_files);
-extern RC_t process_cscope_files_to_build_xrefs (sym_table* , 
-        char* cscope_files);
+extern RC_t process_cscope_files_to_build_sym_table (sym_table& ,
+        std::vector<std::string>& cscope_files);
+extern RC_t process_cscope_files_to_build_xrefs (sym_table& , 
+        std::vector<std::string>& cscope_files);
 #endif

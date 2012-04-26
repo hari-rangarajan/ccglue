@@ -25,8 +25,8 @@
 #include "string.h"
 #include <sstream>
 
-tag_file_writer::tag_file_writer(const char* filename):
-    tagfile(filename)
+tag_file_writer::tag_file_writer(const std::string& filename):
+    tagfile(filename.c_str())
 {
 }
 
@@ -47,7 +47,7 @@ void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry)
 {
     digraph_compress_buf    compress_buf(*(tagfile.rdbuf()));
     std::ostream            compress_stream(&compress_buf);
-    std::stringstream        sstream;
+    std::stringstream       sstream;
     digraph_uncompress_buf  uncompress_buf(*(sstream.rdbuf()));
     std::ostream            uncompress_stream(&uncompress_buf);
 

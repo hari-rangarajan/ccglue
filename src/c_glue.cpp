@@ -28,50 +28,45 @@
 #include "sym_mgr.h"
 #include "cscoperdr.h"
 
-RC_t process_files_with_reader (generic_db_rdr *reader, sym_table* a_sym_table, 
-        const char* db_files)
+RC_t process_files_with_reader (generic_db_rdr& reader, sym_table& a_sym_table, 
+        std::vector<std::string>& db_files)
 {
     char		 line[1024];
-    int			 idx = 0;
-    int                  lines = 0;
-    char                *db_file_name;
-    char                 db_filenames_var[512];
-    std::ifstream             db_file;
+    std::ifstream        db_file;
 
+    std::vector<std::string>::iterator  it;
+
+    db_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     /* need to copy before we try tokenizing */
-    strcpy(db_filenames_var, db_files);
-    db_file_name = strtok(db_filenames_var, ",");
-
-    while (db_file_name != NULL) {
-        db_file.open(db_file_name);
-        while (db_file.getline(line, 
-                    sizeof(line))) {
-            reader->process_line(a_sym_table, line);
-            lines++;
+    for (it = db_files.begin(); it < db_files.end(); it++) {
+        db_file.open((*it).c_str());
+        if (db_file.fail()) {
+        //    throw (*it);
+        }
+        while (!db_file.eof()) {
+            db_file.getline(line, sizeof(line));
+            reader.process_line(a_sym_table, line);
         }
         db_file.close();
-        db_file_name = strtok(NULL, ",");
     }
 
     return RC_SUCCESS;
 }
     
 
-RC_t process_cscope_files_to_build_sym_table (sym_table* a_sym_table, 
-        char* cscope_files)
+RC_t process_cscope_files_to_build_sym_table (sym_table& a_sym_table, 
+        std::vector<std::string>& cscope_files)
 {
-    cscope_db_rdr *rdr = new cscope_db_rdr;
-    rdr->set_scan_action(ACTION_LOAD_SYMS);
+    cscope_db_rdr rdr;
+    rdr.set_scan_action(ACTION_LOAD_SYMS);
     process_files_with_reader(rdr, a_sym_table, cscope_files);
-    delete rdr;
 }
 
-RC_t process_cscope_files_to_build_xrefs (sym_table* a_sym_table,
-        char* cscope_files)
+RC_t process_cscope_files_to_build_xrefs (sym_table& a_sym_table,
+        std::vector<std::string>& cscope_files)
 {
-    cscope_db_rdr *rdr = new cscope_db_rdr;
-    rdr->set_scan_action(ACTION_XREF_SYMS);
+    cscope_db_rdr rdr;
+    rdr.set_scan_action(ACTION_XREF_SYMS);
     process_files_with_reader(rdr, a_sym_table, cscope_files);
-    delete rdr;
 }
 

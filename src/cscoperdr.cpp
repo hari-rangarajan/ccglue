@@ -24,29 +24,18 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_TEMP_BUFFER 1024
 
-/* ??? */
-/*
-seq_file_t **cscope_db_rdr_get_seq_file(cscope_db_rdr_t *rdr) {
-    return &rdr->cscope_db;
-}
-*/
-
-cscope_db_rdr::cscope_db_rdr ()
-    //(const char *cscope_db_name)
-   // : m_cscope_db(cscope_db_name)
+cscope_db_rdr::cscope_db_rdr ():
+    m_in_func(NULL),
+    m_in_file(NULL),
+    m_in_macro(NULL),
+    m_in_enum(NULL)
 {
-    m_in_func = NULL;
-    m_in_file = NULL;
-    m_in_macro = NULL;
-    m_in_enum = NULL;
 }
 
 
 cscope_db_rdr::~cscope_db_rdr()
 {
-    //m_cscope_db.close();
 }
         
 void cscope_db_rdr::set_scan_action (int action)
@@ -54,7 +43,7 @@ void cscope_db_rdr::set_scan_action (int action)
     m_action_type = action;
 }
 
-void cscope_db_rdr::process_line (sym_table *a_sym_table, char* line)
+void cscope_db_rdr::process_line (sym_table& a_sym_table, char* line)
 {
     switch(m_action_type) {
     case ACTION_LOAD_SYMS:
@@ -68,19 +57,19 @@ void cscope_db_rdr::process_line (sym_table *a_sym_table, char* line)
     }
 }
 
-sym_entry* cscope_db_rdr::create_sym_entry_or_lookup (sym_table *a_sym_table, 
+sym_entry* cscope_db_rdr::create_sym_entry_or_lookup (sym_table& a_sym_table, 
                     const char* sym_text)
 {
-    sym_entry* a_sym = a_sym_table->lookup(sym_text);
+    sym_entry* a_sym = a_sym_table.lookup(sym_text);
 
     if (a_sym == NULL) {
         a_sym = new sym_entry(sym_text);
-        a_sym_table->add_sym(a_sym);
+        a_sym_table.add_sym(a_sym);
     }
     return a_sym;
 }
 
-void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, char* line)
+void cscope_db_rdr::build_xref_from_line (sym_table& a_sym_table, char* line)
 {
     char     *  temp;
     sym_entry* ref_func;
@@ -89,14 +78,14 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, char* line)
 
     if (line[0] !='\t') {
         temp = &line[0];
-        untagged_sym = a_sym_table->lookup(temp);
+        untagged_sym = a_sym_table.lookup(temp);
         if (untagged_sym == NULL) {
             return;
         }
         if (m_in_macro) {
-            a_sym_table->mark_xref(m_in_macro, untagged_sym);
+            a_sym_table.mark_xref(m_in_macro, untagged_sym);
         } else if (m_in_func) {
-            a_sym_table->mark_xref(m_in_func, untagged_sym);
+            a_sym_table.mark_xref(m_in_func, untagged_sym);
         }
     } else if (line[0] == '\t') {
         temp = &line[2];
@@ -105,7 +94,7 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, char* line)
             case '`':
                 ref_func = create_sym_entry_or_lookup(a_sym_table, temp);
                 if (m_in_macro && ref_func) {
-                    a_sym_table->mark_xref(m_in_macro, ref_func);
+                    a_sym_table.mark_xref(m_in_macro, ref_func);
                 }
                 break;
             case ')':
@@ -118,14 +107,14 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, char* line)
             case '`':
                 ref_func = create_sym_entry_or_lookup(a_sym_table, temp);
                 if (m_in_func && ref_func) {
-                    a_sym_table->mark_xref(m_in_func, ref_func);
+                    a_sym_table.mark_xref(m_in_func, ref_func);
                 }
                 break;
             case '}':
                 m_in_func = NULL;
                 break;
             case '#':
-                m_in_macro = a_sym_table->lookup(temp);
+                m_in_macro = a_sym_table.lookup(temp);
                 break;
             default:
                 break;
@@ -133,20 +122,20 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, char* line)
         } else {
             switch (line[1]) {
             case '$': 
-                m_in_func = a_sym_table->lookup(temp);
+                m_in_func = a_sym_table.lookup(temp);
                 break;
             case '#': 
-                m_in_macro = a_sym_table->lookup(temp);
+                m_in_macro = a_sym_table.lookup(temp);
                 break;
             case '~':
                 ref_file = create_sym_entry_or_lookup(a_sym_table,&temp[1]);
                 if (ref_file && m_in_file) {
-                    a_sym_table->mark_xref(m_in_file, ref_file);
+                    a_sym_table.mark_xref(m_in_file, ref_file);
                 }
                 break;
             case '@':
                 if (temp[0] != '\0') {
-                    m_in_file = a_sym_table->lookup(temp);
+                    m_in_file = a_sym_table.lookup(temp);
                 }
                 break;
             default:
@@ -157,7 +146,7 @@ void cscope_db_rdr::build_xref_from_line (sym_table *a_sym_table, char* line)
 }
 
 
-void cscope_db_rdr::build_sym_from_line (sym_table *a_sym_table, char* line)
+void cscope_db_rdr::build_sym_from_line (sym_table& a_sym_table, char* line)
 {
     char        *temp;
     sym_entry   *ref_func;
@@ -207,7 +196,7 @@ void cscope_db_rdr::build_sym_from_line (sym_table *a_sym_table, char* line)
 }
 
 
-void cscope_db_rdr::build_xref (sym_table *a_sym_table, char* line)
+void cscope_db_rdr::build_xref (sym_table& a_sym_table, char* line)
 {
 #if 0
     while (m_cscope_db.getline(line,

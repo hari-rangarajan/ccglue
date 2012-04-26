@@ -28,9 +28,9 @@
 #include <vector>
 #include <algorithm>
 
-sym_table::sym_table ()
+sym_table::sym_table ():
+    m_monotonic_id(0)
 {
-    m_monotonic_id = 0;
 }
 
 RC_t sym_table::init ()
@@ -40,6 +40,11 @@ RC_t sym_table::init ()
 
 void sym_table::destroy()
 {
+    for (std::vector<sym_entry *>::const_iterator it = m_array_sym.begin(); it != m_array_sym.end(); it++) {
+        delete *it;
+    }
+    m_array_sym.clear();
+
 #if 0
     g_hash_table_foreach(m_hash_names, 
             sym_name_data_free_iterator, NULL);
@@ -97,9 +102,9 @@ sym_entry* sym_table::lookup (const char *sym_name)
 }
 
 
-void sym_table::write_xref_tag_file (const char* fname)
+void sym_table::write_xref_tag_file (const std::string& filename)
 {
-    tag_file_writer writer(fname);
+    tag_file_writer writer(filename);
     
     writer.write_xref_tag_header();
     write_syms_as_tags_to_file(writer);

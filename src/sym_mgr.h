@@ -53,7 +53,7 @@ class sym_table {
         uint32 get_new_id();
         bool add_sym(sym_entry* a_sym_entry);
         sym_entry* lookup(const char *sym_name);
-        void write_xref_tag_file(const char* fname);
+        void write_xref_tag_file(const std::string& filename);
         void write_syms_as_tags_to_file(tag_file_writer& file);
         void mark_xref(sym_entry* in_func, sym_entry *ref_func);
         void assign_unique_ids_to_symbols();
