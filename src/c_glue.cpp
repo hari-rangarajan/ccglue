@@ -24,33 +24,34 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fstream>
+#include <stdexcept>
 #include "typedefs.h"
 #include "sym_mgr.h"
 #include "cscoperdr.h"
 
-RC_t process_files_with_reader (generic_db_rdr& reader, sym_table& a_sym_table, 
+void process_files_with_reader (generic_db_rdr& reader, sym_table& a_sym_table, 
         std::vector<std::string>& db_files)
 {
-    char		 line[1024];
-    std::ifstream        db_file;
-
+    char		                line[1024];
+    std::ifstream                       db_file;
     std::vector<std::string>::iterator  it;
 
-    db_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     /* need to copy before we try tokenizing */
     for (it = db_files.begin(); it < db_files.end(); it++) {
-        db_file.open((*it).c_str());
+        db_file.open((*it).c_str(), std::ios::in | std::ios::binary);
         if (db_file.fail()) {
-        //    throw (*it);
+            throw std::runtime_error("Failed to open " + *it);
         }
         while (!db_file.eof()) {
             db_file.getline(line, sizeof(line));
             reader.process_line(a_sym_table, line);
+            if (db_file.bad()) {
+                throw std::runtime_error("Error reading " + *it);
+            }
         }
         db_file.close();
     }
-
-    return RC_SUCCESS;
+    return;
 }
     
 

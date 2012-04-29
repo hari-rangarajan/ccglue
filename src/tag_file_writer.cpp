@@ -24,10 +24,14 @@
 #include "digraph.h"
 #include "string.h"
 #include <sstream>
+#include <stdexcept>
 
 tag_file_writer::tag_file_writer(const std::string& filename):
     tagfile(filename.c_str())
 {
+    if (tagfile.fail()) {
+        throw std::runtime_error("Failed to write file " + filename);
+    }
 }
 
 tag_file_writer::~tag_file_writer() 

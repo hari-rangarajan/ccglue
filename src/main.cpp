@@ -24,6 +24,7 @@
 #include "options.h"
 #include "sym_mgr.h"
 #include "c_glue.h"
+#include "tclap/CmdLine.h"
 
 int main (int argc, char **argv)
 {
@@ -32,21 +33,21 @@ int main (int argc, char **argv)
 
     /* Parse our arguments; every option seen by parse_opt will
        be reflected in arguments. */
-    ccglue_parse_command_line_options(argc, argv, &opts);
+    try {
+        ccglue_parse_command_line_options(argc, argv, &opts);
+    }
+    catch ( TCLAP::ArgException& e ) { 
+        std::cout << "ERROR: " << e.error() << " " << e.argId() << std::endl; 
+    }
     
     try {
         process_cscope_files_to_build_sym_table(a_sym_table, opts.cscope_dbs);
         process_cscope_files_to_build_xrefs(a_sym_table, opts.cscope_dbs);
+        a_sym_table.write_xref_tag_file(opts.output_file);
     }
-    catch (std::ifstream::failure& e) {
-        std::cerr << e.what();
+    catch (std::exception& e) {
+        std::cerr << e.what() << "\n";
     }
-    catch (std::string s) {
-        std::cerr << "Processing symbols: Could not read file " << s << "\n";
-    }
-    a_sym_table.write_xref_tag_file(opts.output_file);
-
-exit_label:
     return 0;
 }
 
