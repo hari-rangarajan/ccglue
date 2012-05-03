@@ -11,7 +11,7 @@ class tag_file_writer {
     protected:
         std::ofstream tagfile;
     public:
-        tag_file_writer(const char* filename);
+        tag_file_writer(const std::string& filename);
         ~tag_file_writer();
         void destroy();
         void write_xref_tag_header();

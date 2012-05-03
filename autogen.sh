@@ -1,7 +1,7 @@
 #!/bin/sh
 rm -f config.cache
 rm -f acconfig.h
-aclocal -I m4
+aclocal -I config
 autoconf
 acconfig
 autoheader

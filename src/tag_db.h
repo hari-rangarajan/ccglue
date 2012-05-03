@@ -5,14 +5,13 @@
 
 class tag_db {
     public:
-        tag_db(const char *filename,
-                const char *idx_fname):
+        tag_db(const std::string& filename, const std::string& idx_fname):
             ifs_db(idx_fname),
-            m_data_file(filename, std::ios::in | std::ios::binary) 
+            m_data_file(filename.c_str(), std::ios::in | std::ios::binary) 
             {};
-        void get_tag_line (std::string tag_name);
-        void get_tag_from_stream (std::streambuf * buf, tag *atag);
-        void get_tag_by_id (int id);
+        tag* get_tag_line (std::string tag_name);
+        tag* get_tag_from_stream (std::streambuf * buf);
+        tag* get_tag_by_id (int id);
         void dmp_all();
     protected:
         std::ifstream                   m_data_file;
@@ -29,7 +28,7 @@ void tag_db::dmp_all ()
 }
 
 
-void tag_db::get_tag_from_stream (std::streambuf * buf, tag *atag)
+tag* tag_db::get_tag_from_stream (std::streambuf * buf)
 {
     index_record_t  rec;
     std::istream    is(buf);
@@ -38,14 +37,18 @@ void tag_db::get_tag_from_stream (std::streambuf * buf, tag *atag)
 
     bounded_streambuf   b_sbuf(m_data_file.rdbuf(), rec.size);
 
-    atag->decode_from_stream(buf);
+    tag *atag = new tag;
+    /* create a constructor here */
+    atag->decode_from_stream(&b_sbuf);
+
+    return atag;
 }
 
-void tag_db::get_tag_by_id (int id, tag *atag)
+tag* tag_db::get_tag_by_id (int id) 
 {
     index_record_t  rec;
     std::streambuf*  buf = ifs_db[id];
-    get_tag_from_stream(buf, atag);
+    return get_tag_from_stream(buf);
 }
 
 bool my_dummy_func (std::streambuf* s_buf, const std::string& s)
@@ -90,13 +93,13 @@ bool my_dummy_func (std::streambuf* s_buf, const std::string& s)
     return false; 
 }
 
-void tag_db::get_tag_line (std::string tag_name, tag *atag)
+tag* tag_db::get_tag_line (std::string tag_name)
 {
     indexed_ifstream_vector<int>::iterator it = lower_bound(ifs_db.begin(), ifs_db.end(), tag_name, 
             my_dummy_func);
-    std::cout << "Found "<< it - ifs_db.begin();
+    //std::cout << "Found "<< it - ifs_db.begin();
     std::streambuf*  buf = *it;
-    get_tag_from_stream(buf, atag);
+    return get_tag_from_stream(buf);
 }
 
 typedef struct tag_db_trace_query {
@@ -109,8 +112,10 @@ typedef struct tag_db_trace_element {
 
 } tag_db_trace_element_t;
 
+#if 0
 void tag_db::trace (tag_db_trace_query_t *query, 
                                         std::list<tag_db_trace_element> lst)
 {
     
 }
+#endif

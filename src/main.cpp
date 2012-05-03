@@ -20,45 +20,34 @@
  *
  */
 
-#include <stdio.h>
+#include <iostream>
 #include "options.h"
 #include "sym_mgr.h"
 #include "c_glue.h"
+#include "tclap/CmdLine.h"
 
 int main (int argc, char **argv)
 {
-    ccglue_opts_t opts;
-    sym_table *a_sym_table;
-
-    /* Default values. */
-    opts.silent = 0;
-    opts.verbose = 0;
-    opts.output_file = (char *) "ccglue.out";
-    opts.cscope_dbs = (char *) "cscope.out";
+    ccglue_opts  opts;
+    sym_table    a_sym_table;
 
     /* Parse our arguments; every option seen by parse_opt will
        be reflected in arguments. */
-    ccglue_parse_command_line_options(argc, argv, &opts);
-
-    a_sym_table = new sym_table;
-    a_sym_table->init();
-
-    if (process_cscope_files_to_build_sym_table(a_sym_table,
-                opts.cscope_dbs) == RC_FAILURE) {
-        fprintf(stderr, "Building symbol table: Could not read file %s\n",
-                opts.cscope_dbs);
-        goto exit_label;
+    try {
+        ccglue_parse_command_line_options(argc, argv, &opts);
     }
-    if (process_cscope_files_to_build_xrefs(a_sym_table,
-                opts.cscope_dbs) == RC_FAILURE) {
-        fprintf(stderr, "Processing symbols: Could not read file %s\n",
-                opts.cscope_dbs);
-        goto exit_label;
+    catch ( TCLAP::ArgException& e ) { 
+        std::cout << "ERROR: " << e.error() << " " << e.argId() << std::endl; 
     }
-    a_sym_table->write_xref_tag_file(opts.output_file);
-    delete a_sym_table;
-
-exit_label:
-    exit (0);
+    
+    try {
+        process_cscope_files_to_build_sym_table(a_sym_table, opts.cscope_dbs);
+        process_cscope_files_to_build_xrefs(a_sym_table, opts.cscope_dbs);
+        a_sym_table.write_xref_tag_file(opts.output_file, opts.output_index_file);
+    }
+    catch (std::exception& e) {
+        std::cerr << e.what() << "\n";
+    }
+    return 0;
 }
 

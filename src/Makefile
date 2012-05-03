@@ -32,11 +32,15 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = ccglue$(EXEEXT)
+bin_PROGRAMS = ccglue$(EXEEXT) ccglue_tracer$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/config/ac_cxx_have_long_long.m4 \
+	$(top_srcdir)/config/ac_cxx_have_sstream.m4 \
+	$(top_srcdir)/config/ac_cxx_have_strstream.m4 \
+	$(top_srcdir)/config/ac_cxx_namespaces.m4 \
+	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -47,50 +51,47 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ccglue_OBJECTS = options.$(OBJEXT) cscoperdr.$(OBJEXT) \
 	sym_mgr.$(OBJEXT) digraph.$(OBJEXT) main.$(OBJEXT) \
-	c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) debug.$(OBJEXT)
+	c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT)
 ccglue_OBJECTS = $(am_ccglue_OBJECTS)
-am__DEPENDENCIES_1 =
-ccglue_DEPENDENCIES = $(am__DEPENDENCIES_1)
+ccglue_LDADD = $(LDADD)
+am_ccglue_tracer_OBJECTS = tracer_options.$(OBJEXT) tracer.$(OBJEXT) \
+	digraph.$(OBJEXT)
+ccglue_tracer_OBJECTS = $(am_ccglue_tracer_OBJECTS)
+ccglue_tracer_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
-depcomp = $(SHELL) $(top_srcdir)/depcomp
+depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-SOURCES = $(ccglue_SOURCES)
-DIST_SOURCES = $(ccglue_SOURCES)
+SOURCES = $(ccglue_SOURCES) $(ccglue_tracer_SOURCES)
+DIST_SOURCES = $(ccglue_SOURCES) $(ccglue_tracer_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run aclocal-1.11
-AMTAR = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run tar
-AUTOCONF = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run automake-1.11
+ACLOCAL = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run aclocal-1.11
+AMTAR = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run tar
+AUTOCONF = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run automake-1.11
 AWK = mawk
-CC = gcc
-CCDEPMODE = depmode=gcc3
-CFLAGS = -g 
 CPPFLAGS = 
 CXX = g++
+CXXCPP = g++ -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g
+CXXFLAGS = -O0 -g
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
+EGREP = /bin/grep -E
 EXEEXT = 
-GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include  
-GLIB_LIBS = -lglib-2.0  
+GREP = /bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -100,7 +101,7 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/tux/myprojects/ccglue/git-ver/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 PACKAGE = 
@@ -111,9 +112,6 @@ PACKAGE_TARNAME =
 PACKAGE_URL = 
 PACKAGE_VERSION = 
 PATH_SEPARATOR = :
-PKG_CONFIG = /usr/bin/pkg-config
-PKG_CONFIG_LIBDIR = 
-PKG_CONFIG_PATH = 
 SET_MAKE = 
 SHELL = /bin/bash
 STRIP = 
@@ -122,7 +120,6 @@ abs_builddir = /home/tux/myprojects/ccglue/git-ver/src
 abs_srcdir = /home/tux/myprojects/ccglue/git-ver/src
 abs_top_builddir = /home/tux/myprojects/ccglue/git-ver
 abs_top_srcdir = /home/tux/myprojects/ccglue/git-ver
-ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
 am__leading_dot = .
@@ -141,7 +138,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/tux/myprojects/ccglue/git-ver/install-sh
+install_sh = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -161,14 +158,13 @@ target_alias =
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
-ccglue_SOURCES = options.c cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp debug.cpp
-AM_CFLAGS = $(GLIB_CFLAGS)
-ccglue_LDADD = $(GLIB_LIBS)
-INCLUDES = `pkg-config --cflags glib-2.0`
+ccglue_SOURCES = options.cpp cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp
+ccglue_tracer_SOURCES = tracer_options.cpp tracer.cpp digraph.cpp
+AM_CPPFLAGS = -I$(top_srcdir)/include/
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .cpp .o .obj
+.SUFFIXES: .cpp .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -239,6 +235,9 @@ clean-binPROGRAMS:
 ccglue$(EXEEXT): $(ccglue_OBJECTS) $(ccglue_DEPENDENCIES) 
 	@rm -f ccglue$(EXEEXT)
 	$(CXXLINK) $(ccglue_OBJECTS) $(ccglue_LDADD) $(LIBS)
+ccglue_tracer$(EXEEXT): $(ccglue_tracer_OBJECTS) $(ccglue_tracer_DEPENDENCIES) 
+	@rm -f ccglue_tracer$(EXEEXT)
+	$(CXXLINK) $(ccglue_tracer_OBJECTS) $(ccglue_tracer_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -248,26 +247,13 @@ distclean-compile:
 
 include ./$(DEPDIR)/c_glue.Po
 include ./$(DEPDIR)/cscoperdr.Po
-include ./$(DEPDIR)/debug.Po
 include ./$(DEPDIR)/digraph.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/options.Po
 include ./$(DEPDIR)/sym_mgr.Po
 include ./$(DEPDIR)/tag_file_writer.Po
-
-.c.o:
-	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-#	source='$<' object='$@' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(COMPILE) -c $<
-
-.c.obj:
-	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-#	source='$<' object='$@' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+include ./$(DEPDIR)/tracer.Po
+include ./$(DEPDIR)/tracer_options.Po
 
 .cpp.o:
 	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

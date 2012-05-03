@@ -29,9 +29,9 @@
 #include <algorithm>
 #include "indexed_fstream.h"
 
-sym_table::sym_table ()
+sym_table::sym_table ():
+    m_monotonic_id(0)
 {
-    m_monotonic_id = 0;
 }
 
 RC_t sym_table::init ()
@@ -41,31 +41,19 @@ RC_t sym_table::init ()
 
 void sym_table::destroy()
 {
-#if 0
-    g_hash_table_foreach(m_hash_names, 
-            sym_name_data_free_iterator, NULL);
-#endif
+    for (std::vector<sym_entry *>::const_iterator it = m_array_sym.begin(); it != m_array_sym.end(); it++) {
+        delete *it;
+    }
+    m_array_sym.clear();
 }
 
 sym_table::~sym_table()
 {
     destroy();
-   // g_array_free(m_array_sym, TRUE);
-   // g_hash_table_destroy(m_hash_names);
 }
 
-#if 0
-void sym_table::sym_name_data_free_iterator (gpointer key,
-        gpointer value, gpointer user_data)
-{
-    free((uchar *) key);
-    //((sym_entry *) value)->destroy();
-    delete (sym_entry *) value;
-}
-#endif
 
-
-uint32 sym_table::get_new_id ()
+uint32 sym_table::get_new_id () 
 {
     return m_monotonic_id++;
 }
@@ -74,7 +62,7 @@ uint32 sym_table::get_new_id ()
 
 bool sym_table::add_sym (sym_entry* a_sym_entry)
 {
-    debug::log("Adding %s on ???\n", a_sym_entry->get_n().c_str());
+    //debug::log("Adding %s on ???\n", a_sym_entry->get_n().c_str());
 
     //m_hash_names.insert(std::tr1::unordered_map<const char *,sym_entry *>::
       //      value_type(a_sym_entry->get_n().c_str(), a_sym_entry));
@@ -85,7 +73,7 @@ bool sym_table::add_sym (sym_entry* a_sym_entry)
 }
 
 
-sym_entry* sym_table::lookup (const char *sym_name)
+sym_entry* sym_table::lookup (const char *sym_name) const
 {
         hash_map_sym::const_iterator sym_entries_iterator;
 
@@ -98,13 +86,19 @@ sym_entry* sym_table::lookup (const char *sym_name)
 }
 
 
-void sym_table::write_xref_tag_file (const char* fname)
+void sym_table::write_xref_tag_file (const std::string& fname,
+        const std::string& index_fname)
 {
     tag_file_writer writer(fname);
-    indexed_ofstream idx_ofs("ccglue.idx");
     
     writer.write_xref_tag_header();
-    write_syms_as_tags_to_file_with_idx(writer, idx_ofs);
+    
+    if (!index_fname.empty()) {
+        indexed_ofstream idx_ofs(index_fname);
+        write_syms_as_tags_to_file_with_idx(writer, idx_ofs);
+    } else {
+        write_syms_as_tags_to_file(writer);
+    }
 }
 
 
@@ -182,10 +176,12 @@ void sym_table::write_syms_as_tags_to_file_with_idx (tag_file_writer& file,
         fbs.seekp(idx_fpos_start, std::ios::beg);
         fbs.write(reinterpret_cast<char *>(&rec), sizeof(index_record_t));
         fbs.seekp(idx_fpos_end, std::ios::beg);
+#if 0
         std::cout << "writing " << (*iter)->get_n() << "size " <<
             idx_fpos_end - idx_fpos_start << 
             " start " << idx_fpos_start <<
             " end " << idx_fpos_end << std::endl;
+#endif
         idx_file.end_record();
     }
     idx_file.write_index_to_file();

@@ -57,8 +57,9 @@ class sym_table {
         void destroy();
         uint32 get_new_id();
         bool add_sym(sym_entry* a_sym_entry);
-        sym_entry* lookup(const char *sym_name);
-        void write_xref_tag_file(const char* fname);
+        sym_entry* lookup(const char *sym_name) const;
+        void write_xref_tag_file(const std::string& filename, 
+                const std::string& index_fname);
         void write_syms_as_tags_to_file(tag_file_writer& file);
         void write_syms_as_tags_to_file_with_idx (tag_file_writer& file,
                 indexed_ofstream& idx_file);

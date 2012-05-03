@@ -14,7 +14,7 @@ enum {
 class generic_db_rdr {
     public:
         virtual void set_scan_action(int action) = 0;
-        virtual void process_line(sym_table *, char* ) = 0;
+        virtual void process_line(sym_table&, char* ) = 0;
 };
 
 
@@ -30,13 +30,13 @@ class cscope_db_rdr: public generic_db_rdr {
     public:
         cscope_db_rdr();
         ~cscope_db_rdr();
-        void process_line(sym_table *, char* );
-        void build_sym_table(sym_table *a_sym_table, char* line);
-        void build_xref(sym_table *a_sym_table, char* line);
-        void build_xref_from_line(sym_table *a_sym_table, char* line);
-        void build_sym_from_line(sym_table *a_sym_table, char* line);
+        void process_line(sym_table&, char* );
+        void build_sym_table(sym_table&, char* line);
+        void build_xref(sym_table&, char* line);
+        void build_xref_from_line(sym_table&, char* line);
+        void build_sym_from_line(sym_table&, char* line);
         void set_scan_action(int action);
-        sym_entry* create_sym_entry_or_lookup (sym_table *a_sym_table,
+        sym_entry* create_sym_entry_or_lookup (sym_table&,
                 const char* sym_text);
 };
 

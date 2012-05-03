@@ -24,10 +24,14 @@
 #include "digraph.h"
 #include "string.h"
 #include <sstream>
+#include <stdexcept>
 
-tag_file_writer::tag_file_writer(const char* filename):
-    tagfile(filename)
+tag_file_writer::tag_file_writer(const std::string& filename):
+    tagfile(filename.c_str())
 {
+    if (tagfile.fail()) {
+        throw std::runtime_error("Failed to write file " + filename);
+    }
 }
 
 tag_file_writer::~tag_file_writer() 
@@ -51,6 +55,7 @@ void tag_file_writer::write_xref_tag_header ()
 
 void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry) 
 {
+    std::stringstream       sstream;
 
     digraph_compress_buf    compress_buf(*(tagfile.rdbuf()),
                                            digraph_maps::get_numeric_compress_map());
