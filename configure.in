@@ -29,5 +29,5 @@ AC_CXX_HAVE_SSTREAM
 AC_CXX_HAVE_STRSTREAM
 AC_CXX_HAVE_LONG_LONG
 AC_PROG_INSTALL
-AC_OUTPUT(Makefile src/Makefile doc/Makefile include/tclap/Makefile)
+AC_OUTPUT(Makefile src/Makefile doc/Makefile)
 
