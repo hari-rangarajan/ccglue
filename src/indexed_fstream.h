@@ -16,44 +16,19 @@ typedef struct {
 
 class indexed_ofstream {
     public:
-        indexed_ofstream(const std::string& filename):
-            m_ofs(filename.c_str(), std::ios::out | std::ios::binary) {
-                if (m_ofs.fail()) {
-                    throw std::runtime_error("Failed to open file " + filename);
-                }
-            };
-        ~indexed_ofstream() {};
-        void end_record() {
-            m_index_record.size = m_ofs.tellp() -
-                m_index_record.record_start;
-            m_record_pos_list.push_back(m_index_record);
-        }
-        void begin_record() {
-            m_index_record.record_start = m_ofs.tellp();
-        }
-        void write_index_to_file() {
-            long            stream_pos = m_ofs.tellp();
-            std::ostream    os(m_ofs.rdbuf());
-            write_records_binary(os);
-
-            os.write(reinterpret_cast<const char *>(&stream_pos), sizeof(std::streampos));
-        };
-        void write_records_binary(std::ostream&  sout) {
-            typename std::list<index_record_t>::iterator  iter;
-
-            for (iter = m_record_pos_list.begin(); iter != m_record_pos_list.end(); iter++) {
-                sout.write(reinterpret_cast<const char *>(&(*iter)), sizeof(index_record_t));
-            }
-        }
+        indexed_ofstream(const std::string& filename);
+        ~indexed_ofstream();
+        void end_record(); 
+        void begin_record();
+        void write_index_to_file();
+        void write_records_binary(std::ostream&  sout);
         void dump(std::ostream&  sout);
-        std::streambuf* rdbuf() {return (m_ofs.rdbuf());};
-        void close() {m_ofs.close();};
+        std::streambuf* rdbuf();
+        void close();
     protected:
         std::ofstream                m_ofs;
         index_record_t               m_index_record;
         std::list<index_record_t>    m_record_pos_list;
-    private:
-        void create_index_file();
 };
 
 
@@ -63,56 +38,22 @@ class bounded_streambuf:public std::streambuf {
         
     public:
         std::streambuf  *m_buf;
-        bounded_streambuf(std::streambuf *buf, int bound=0):
-            m_buf(buf), m_bound(bound) {
-            setg(0,0,0);
-        };
-        int     setbound (int numc) {
-            m_bound = numc;
-        };
-        traits_type::int_type sbumpc() {
-            return m_buf->sbumpc();
-        };
-        traits_type::int_type sgetc() {
-            return m_buf->sgetc();
-        };
+        bounded_streambuf(std::streambuf *buf, int bound=0);
+        int     setbound (int numc);
+        traits_type::int_type sbumpc();
+        traits_type::int_type sgetc();
 
-        traits_type::int_type uflow() {
-            m_bound--;
-            if (m_bound == 0) {
-                return traits_type::eof();
-            }
-            char c = m_buf->sbumpc();
-            return c;
-        };
-        traits_type::int_type underflow() {
-            if (m_bound == 0) {
-                return traits_type::eof();
-            }
-            char c = m_buf->sgetc();
-            return c;
-        };
+        traits_type::int_type uflow();
+        traits_type::int_type underflow();
         std::streampos seekoff(std::streamoff off, 
-                std::ios::seekdir way,  std::ios::openmode which)
-        {
-            m_bound -= off;
-            return m_buf->pubseekoff(off, way, which);
-        }
+                std::ios::seekdir way,  std::ios::openmode which);
 };
-
 
 
 template <class T>
 class indexed_ifstream_vector {
     public:
-        explicit indexed_ifstream_vector(const std::string& index_file):
-            m_index_file(index_file.c_str(), std::ios::in | std::ios::binary),
-            m_bounded_data_record(m_index_file.rdbuf()) { 
-                if (m_index_file.fail()) {
-                    throw std::runtime_error("Failed to open file " + index_file); 
-                }
-                init();
-            };
+        explicit indexed_ifstream_vector(const std::string& index_file);
         class iterator:
             public std::iterator<std::random_access_iterator_tag, std::string > {
                 protected:
@@ -174,56 +115,20 @@ class indexed_ifstream_vector {
                     }
             };
 
-        iterator begin() {
-            return iterator(*this, 0);
-        };
-        iterator end() {
-            return iterator(*this, this->size()-1);
-        };
-        bounded_streambuf* operator [] (int index) {
-            return get_record_stream(index);
-        };
-        
-        bounded_streambuf* get_record_stream (int rec_num) {
-            seek_record(rec_num);
-            m_bounded_data_record.setbound(get_record_len(rec_num));
-            return &m_bounded_data_record;
-        };
-
-        int  size() const { return (m_vec.size());};
-        int  seek_record(int rec_num) {
-            int count;
-            m_index_file.seekg(m_vec.at(rec_num).record_start, std::ios_base::beg);
-            return false;
-        };
-        int  get_record_len(int rec_num) {
-            return m_vec.at(rec_num).size;
-        };
-        void dump(std::ostream&  sout) {
-            std::ostream_iterator<char> out_it (sout,"");
-            copy ( this->begin(), this->end(), out_it );
-        };
+        iterator begin();
+        iterator end();
+        bounded_streambuf* operator [] (int index);
+        bounded_streambuf* get_record_stream (int rec_num);
+        int  size() const; 
+        int  seek_record(int rec_num);
+        int  get_record_len(int rec_num);
+        void dump(std::ostream&  sout);
     protected:
         std::vector<index_record_t>  m_vec;
         std::ifstream   m_index_file;
         bounded_streambuf    m_bounded_data_record;
 
-        void            init() {
-            std::streampos beg_of_idx;
-            std::streampos end_of_idx;
-            int num_records;
-
-            m_index_file.seekg(-sizeof(std::streampos), std::ios_base::end);
-            m_index_file.read(reinterpret_cast<char *>(&beg_of_idx), sizeof(std::streampos));
-            end_of_idx =  m_index_file.tellg();
-            m_index_file.seekg(beg_of_idx, std::ios_base::beg);
-
-            num_records = (end_of_idx - beg_of_idx)/sizeof(index_record_t);
-
-            m_vec.resize(num_records);
-            m_index_file.read(reinterpret_cast<char *>(&m_vec[0]), m_vec.size() * sizeof(index_record_t));
-        }
+        void            init();
 };
-
 
 #endif

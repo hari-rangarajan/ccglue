@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
+/* Define for debugging */
+/* #undef DEBUG */
+
 /* define if the library defines strstream */
 #define HAVE_CLASS_STRSTREAM 1
 

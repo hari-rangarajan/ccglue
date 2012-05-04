@@ -1,4 +1,4 @@
-#include "indexed_fstream.h"
+#include "indexed_fstream.hpp"
 #include <algorithm>
 #include <string>
 #include "tagfilerdr.h"

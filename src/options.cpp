@@ -59,6 +59,9 @@ void parse_options (int argc, char **argv, ccglue_opts *opts)
             );
     cmd.add(output_file);
     
+    TCLAP::SwitchArg build_index_file ("I","build-index", 
+            "Build cross-reference tag file index. For use with ccglue_tracer.", cmd, false);
+    
     TCLAP::ValueArg<std::string> output_index_file ("i", 
             "index-file", 
             "Index file name. Default: [OUTPUT_FILE].idx (i.e., ccglue.out.idx)",
@@ -73,8 +76,9 @@ void parse_options (int argc, char **argv, ccglue_opts *opts)
     opts->silent = quiet_switch.getValue(); 
     opts->output_file = output_file.getValue(); 
     opts->output_index_file = output_index_file.getValue(); 
+    opts->build_index_file = build_index_file.getValue(); 
 
-    if (opts->output_index_file.empty()) {
+    if (opts->output_index_file.empty() && opts->build_index_file) {
         opts->output_index_file = opts->output_file + ".idx";
     }
     string_split(cscopeFiles.getValue(), ',', opts->cscope_dbs);

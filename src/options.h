@@ -33,6 +33,7 @@ class ccglue_opts {
         std::vector<std::string> tag_files;
         std::string              output_file;
         std::string              output_index_file;
+        bool                     build_index_file;
         bool                     silent;
         bool                     verbose;
 };

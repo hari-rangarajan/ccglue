@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include "indexed_fstream.h"
+#include "indexed_fstream.hpp"
 
 sym_table::sym_table ():
     m_monotonic_id(0)
