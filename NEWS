@@ -8,3 +8,8 @@ April 26, 2012, Hari Rangarajan (hariranga@sourceforge.users.net)
 * Uses the TCLAP library for command-line parsing (packaged)
 * Cross-compilable to any platform with a C++ compiler
 
+May 4, 2012, Hari Rangarajan (hariranga@sourceforge.users.net)
+Introducing the ccglue_tracer utility that can dump call-tree 
+output to the terminal. Allows usage outside Vim and possible
+reprocessing of call-trees to other applications.
+

@@ -36,3 +36,16 @@ Options to the configure script are up to you.  For details, run:
 
 	./configure --help
 (There is only a debug flag to generate debug symbols)
+
+
+USAGE
+*****************************************
+
+Build cross-reference tag file with index
+
+    $ ccglue -I                                     (or --build-index)
+
+Trace symbols
+
+    $ ccglue_tracer -s SYMBOL_NAME -c f -d 2        (f - forward tree, r - reverse)
+
