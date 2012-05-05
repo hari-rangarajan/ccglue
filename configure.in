@@ -8,11 +8,9 @@ AM_CONFIG_HEADER(config.h)
 # borrowed from http://ubuntuforums.org/showthread.php?t=1556520
 # prevent setting xFLAGS to default of -g -O2
 if test x"$CXXFLAGS" = x""; then
-    AC_SUBST(CXXFLAGS, [-fno-rtti ])
+    AC_SUBST(CXXFLAGS, [-fno-rtti])
 fi
 AC_PROG_CXX
-echo $CXXFLAGS
-
 
 AC_ARG_ENABLE([debug], AC_HELP_STRING([--enable-debug],
                      [compile with debug symbols @<:@default=no@:>@]),

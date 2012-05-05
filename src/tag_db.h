@@ -20,7 +20,7 @@ class tag_db {
 
 void tag_db::dmp_all ()
 {
-    indexed_ifstream_vector<int>::iterator iter(ifs_db);
+    indexed_ifstream_vector<int>::iterator iter(&ifs_db);
 
     for (iter= ifs_db.begin(); iter != ifs_db.end(); iter++) {
         std::cout << *iter << " <<\n";

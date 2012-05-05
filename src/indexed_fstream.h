@@ -57,12 +57,13 @@ class indexed_ifstream_vector {
         class iterator:
             public std::iterator<std::random_access_iterator_tag, std::string > {
                 protected:
-                    indexed_ifstream_vector<T>&                     m_idx_ifs_vec;
+                    indexed_ifstream_vector<T>                     *m_idx_ifs_vec;
                     int                                             m_current_rec_num;
                 public:
                     typedef typename std::iterator<std::input_iterator_tag, indexed_ifstream_vector<T> >::difference_type difference_type;
                     friend class indexed_ifstream_vector;
-                    iterator (indexed_ifstream_vector<T>& v,
+                    iterator():m_idx_ifs_vec(NULL), m_current_rec_num(0) {};
+                    iterator (indexed_ifstream_vector<T>* v,
                             int index = 0):
                         m_idx_ifs_vec(v), m_current_rec_num(index) {};
 
@@ -77,6 +78,7 @@ class indexed_ifstream_vector {
                     }
 
                     iterator& operator=(const iterator& rhs) {
+                        m_idx_ifs_vec = rhs.m_idx_ifs_vec;
                         m_current_rec_num = rhs.m_current_rec_num;
                         return (*this);
                     }
@@ -96,7 +98,7 @@ class indexed_ifstream_vector {
                     }
                     
                     std::streambuf* operator* () {
-                        return m_idx_ifs_vec[m_current_rec_num];
+                        return m_idx_ifs_vec->at(m_current_rec_num);
                     }
                     
                     difference_type operator-(const iterator& iter) const {
@@ -117,6 +119,7 @@ class indexed_ifstream_vector {
 
         iterator begin();
         iterator end();
+        bounded_streambuf* at (int index);
         bounded_streambuf* operator [] (int index);
         bounded_streambuf* get_record_stream (int rec_num);
         int  size() const; 

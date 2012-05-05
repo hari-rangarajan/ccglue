@@ -29,7 +29,7 @@ void indexed_ofstream::begin_record()
         
 void indexed_ofstream::write_index_to_file() 
 {
-    long            stream_pos = m_ofs.tellp();
+    std::streampos  stream_pos = m_ofs.tellp();
     std::ostream    os(m_ofs.rdbuf());
     write_records_binary(os);
 
@@ -38,7 +38,7 @@ void indexed_ofstream::write_index_to_file()
         
 void indexed_ofstream::write_records_binary(std::ostream&  sout)
 {
-    typename std::list<index_record_t>::iterator  iter;
+    std::list<index_record_t>::iterator  iter;
 
     for (iter = m_record_pos_list.begin(); iter != m_record_pos_list.end(); iter++) {
         sout.write(reinterpret_cast<const char *>(&(*iter)), sizeof(index_record_t));
@@ -114,8 +114,9 @@ void indexed_ifstream_vector<T>::init ()
     std::streampos beg_of_idx;
     std::streampos end_of_idx;
     int num_records;
-
-    m_index_file.seekg(-sizeof(std::streampos), std::ios_base::end);
+    int streampos_size = sizeof(std::streampos);
+    
+    m_index_file.seekg(-streampos_size, std::ios_base::end);
     m_index_file.read(reinterpret_cast<char *>(&beg_of_idx), sizeof(std::streampos));
     end_of_idx =  m_index_file.tellg();
     m_index_file.seekg(beg_of_idx, std::ios_base::beg);
@@ -134,19 +135,26 @@ indexed_ifstream_vector<T>::indexed_ifstream_vector(const std::string& index_fil
     if (m_index_file.fail()) {
         throw std::runtime_error("Failed to open file " + index_file); 
     }
+    m_index_file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
     init();
 };
 
 template <class T>
 typename indexed_ifstream_vector<T>::iterator indexed_ifstream_vector<T>::begin()
 {
-    return indexed_ifstream_vector<T>::iterator(*this, 0);
+    return typename indexed_ifstream_vector<T>::iterator(this, 0);
 }
 template <class T>
 typename indexed_ifstream_vector<T>::iterator indexed_ifstream_vector<T>::end()
 {
-    return indexed_ifstream_vector<T>::iterator(*this, this->size()-1);
+    return typename indexed_ifstream_vector<T>::iterator(this, this->size()-1);
 }
+template <class T>
+bounded_streambuf* indexed_ifstream_vector<T>::at (int index)
+{
+    return get_record_stream(index);
+}
+
 template <class T>
 bounded_streambuf* indexed_ifstream_vector<T>::operator [] (int index)
 {
