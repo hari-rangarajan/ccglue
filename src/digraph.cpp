@@ -111,7 +111,7 @@ void digraph_utils::uncompress_string_with_map (digraph_uncompress_map_t *map,
     int idx;
 
     while (*cmpstr != '\0') {
-        idx = (uchar) (*cmpstr) - 128;
+        idx = (int)((uchar) (*cmpstr)) - 128;
         if (idx > 0) {
             uncmpstr[0] = map->table[idx][0];
             uncmpstr[1] = map->table[idx][1];
@@ -130,34 +130,55 @@ const char* digraph_maps::numseq2 = ",0123456789";
 const char* digraph_maps::charseq1 = " teisaprnl(of)=c";
 const char* digraph_maps::charseq2 = " tnerpla";
         
-digraph_compress_map_t   digraph_maps::numeric_map;
-digraph_uncompress_map_t digraph_maps::letter_map;
+digraph_uncompress_map_t   digraph_maps::numeric_uncompress_map;
+digraph_compress_map_t   digraph_maps::numeric_compress_map;
+digraph_uncompress_map_t digraph_maps::letter_uncompress_map;
 
-bool digraph_maps::numeric_map_init = false;
-bool digraph_maps::letter_map_init = false;
+bool digraph_maps::numeric_compress_map_init = false;
+bool digraph_maps::numeric_uncompress_map_init = false;
+bool digraph_maps::letter_uncompress_map_init = false;
 
 /* build singleton access methods here */
 
-digraph_compress_map_t* digraph_maps::get_numeric_map ()
+digraph_compress_map_t* digraph_maps::get_numeric_compress_map ()
 {
-    if (digraph_maps::numeric_map_init == false) {
-        digraph_utils::build_char_compress_map(&numeric_map, numseq1, numseq2);
-        digraph_maps::numeric_map_init = true;
+    if (digraph_maps::numeric_compress_map_init == false) {
+        digraph_utils::build_char_compress_map(&numeric_compress_map, numseq1, numseq2);
+        digraph_maps::numeric_compress_map_init = true;
     }
-    return &digraph_maps::numeric_map;
+    return &digraph_maps::numeric_compress_map;
+}
+
+digraph_uncompress_map_t* digraph_maps::get_numeric_uncompress_map ()
+{
+    if (digraph_maps::numeric_uncompress_map_init == false) {
+        digraph_utils::build_char_uncompress_map(&numeric_uncompress_map, numseq1, numseq2);
+        digraph_maps::numeric_uncompress_map_init = true;
+    }
+    return &digraph_maps::numeric_uncompress_map;
 }
 
 
-digraph_uncompress_map_t* digraph_maps::get_letter_map ()
+
+digraph_uncompress_map_t* digraph_maps::get_letter_uncompress_map ()
 {
-    if (digraph_maps::letter_map_init == false) {
-        digraph_utils::build_char_uncompress_map(&letter_map, charseq1, charseq2);
-        digraph_maps::letter_map_init = true;
+    if (digraph_maps::letter_uncompress_map_init == false) {
+        digraph_utils::build_char_uncompress_map(&letter_uncompress_map, charseq1, charseq2);
+        digraph_maps::letter_uncompress_map_init = true;
     }
-    return &digraph_maps::letter_map;
+    return &digraph_maps::letter_uncompress_map;
 }
 
 using namespace std;
+
+
+int digraph_compress_buf::sync() 
+{
+    if (tmp_char != '\0') {
+        s_buf.sputc(traits_type::to_char_type(tmp_char));
+        tmp_char = '\0';
+    }
+}
 
 digraph_compress_buf::int_type 
     digraph_compress_buf::overflow( int_type c ) {
@@ -166,15 +187,15 @@ digraph_compress_buf::int_type
         //std::cout << "coming here " << traits_type::to_char_type(c) << "\n";
         if( c != traits_type::eof() ){
             if (tmp_char == '\0') {
-                if (map->rev_index1[c] != 0xFF) {
+                if (m_map->rev_index1[c] != 0xFF) {
                     tmp_char = c;
                 } else {
                     s_buf.sputc(traits_type::to_char_type(c));
                     tmp_char = '\0';
                 }
             } else {
-                c = map->table[map->rev_index1[tmp_char]]
-                    [map->rev_index2[c]];
+                c = m_map->table[m_map->rev_index1[tmp_char]]
+                    [m_map->rev_index2[c]];
                 s_buf.sputc(traits_type::to_char_type(c));
                 //std:cout << "\t\t\tcompressing " << c << "\n";
                 tmp_char = '\0';
@@ -183,18 +204,63 @@ digraph_compress_buf::int_type
     return c;
 } 
 
+digraph_uncompress_buf::int_type digraph_uncompress_buf::uflow() 
+{
+    traits_type::int_type   c;
+    if (num_tmp == 0) {
+        c = underflow();
+        if (c == traits_type::eof()) {
+            return c;
+        }
+    } 
+    c = tmp_char[0];
+    tmp_char[0] = tmp_char[1];
+    num_tmp--;
 
+    //std::cout << " sending " << (char) c << endl;
+    return c;
+}
+
+
+digraph_uncompress_buf::int_type 
+    digraph_uncompress_buf::underflow() {
+        char   c;
+
+        //std::cout << " getting " << (int) s_buf.sgetc() << endl;
+        if (num_tmp == 0) {
+            c = s_buf.sbumpc();
+        } else {
+            c = tmp_char[0];
+            return c;
+        }
+        if (c == traits_type::eof()) {
+            return c;
+        }
+        int idx = (int)((unsigned char) c) - 128;
+        if (idx > 0) {
+            tmp_char[0] = m_map->table[idx][0];
+            tmp_char[1] = m_map->table[idx][1];
+            num_tmp = 2;
+            return tmp_char[0];
+        } else { 
+            tmp_char[0] = c;
+            num_tmp = 1;
+            return c;
+        }
+}
+
+#if 0
 digraph_uncompress_buf::int_type 
     digraph_uncompress_buf::overflow( int_type c ) {
         int idx = c - 128;
    //std::cout << "index " << idx << "\n";
         if (idx > 0) {
- //           std::cout << "writing " << map->table[idx][0] << "," << map->table[idx][1] <<  "\n";
-            s_buf.sputc(map->table[idx][0]);
-            s_buf.sputc(map->table[idx][1]);
+ //           std::cout << "writing " << m_map->table[idx][0] << "," << map->table[idx][1] <<  "\n";
+            s_buf.sputc(m_map->table[idx][0]);
+            s_buf.sputc(m_map->table[idx][1]);
         } else {
             s_buf.sputc(traits_type::to_char_type(c));
         }
         return c;
 }
-
+#endif

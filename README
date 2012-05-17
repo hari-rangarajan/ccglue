@@ -1,6 +1,8 @@
 ccglue is intended to be the interfacing app between cscope and ctags. It
 can generate cross-reference tag files that can be interfaced with the Vim
-CCTree plugin (http://www.vim.org/scripts/script.php?script_id=2368).
+CCTree plugin (http://www.vim.org/scripts/script.php?script_id=2368). There
+is a stand-alone command-line tracer (ccglue_tracer) that can dump 
+call-tree outlines whose output can be reprocessed.
 
 Currently supported languages: C
 
@@ -23,7 +25,8 @@ ctags -- ctags.sourceforge.net
 BUILDING and INSTALLING
 ****************************************
 The package with configured with auto-tools.  The typical installation process
-should work on most systems. Requires a reasonably up-to-date version of GLib.
+should work on most systems. Requires a reasonably recent C++ compiler with
+STL libraries (including TR1).
 
 	./configure
 	make
@@ -32,4 +35,17 @@ should work on most systems. Requires a reasonably up-to-date version of GLib.
 Options to the configure script are up to you.  For details, run:
 
 	./configure --help
-(There is none now though)
+(There is only a debug flag to generate debug symbols)
+
+
+USAGE
+*****************************************
+
+Build cross-reference tag file with index
+
+    $ ccglue -I                                     (or --build-index)
+
+Trace symbols
+
+    $ ccglue_tracer -s SYMBOL_NAME -c f -d 2        (f - forward tree, r - reverse)
+

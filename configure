@@ -621,8 +621,8 @@ EXEEXT
 ac_ct_CXX
 CPPFLAGS
 LDFLAGS
-CXXFLAGS
 CXX
+CXXFLAGS
 am__untar
 am__tar
 AMTAR
@@ -688,6 +688,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_dependency_tracking
+enable_debug
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1315,6 +1316,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
+  --enable-debug          compile with debug symbols [default=no]
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -2501,6 +2503,13 @@ am__tar='$${TAR-tar} chof - "$$tardir"' am__untar='$${TAR-tar} xf -'
 
 ac_config_headers="$ac_config_headers config.h"
 
+
+# borrowed from http://ubuntuforums.org/showthread.php?t=1556520
+# prevent setting xFLAGS to default of -g -O2
+if test x"$CXXFLAGS" = x""; then
+    CXXFLAGS=-fno-rtti
+
+fi
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -3200,6 +3209,24 @@ fi
 
 
 
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug; want_debug="$enableval"
+else
+  want_debug=no
+fi
+
+
+if test "x$want_debug" = "xyes"; then
+    CXXFLAGS="$CXXFLAGS -O0 -ggdb"
+
+$as_echo "#define DEBUG 1" >>confdefs.h
+
+else
+    CXXFLAGS="$CXXFLAGS -O2"
+fi
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the compiler implements namespaces" >&5
 $as_echo_n "checking whether the compiler implements namespaces... " >&6; }
 if ${ac_cv_cxx_namespaces+:} false; then :
@@ -3806,7 +3833,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile include/tclap/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -4541,7 +4568,7 @@ do
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "include/tclap/Makefile") CONFIG_FILES="$CONFIG_FILES include/tclap/Makefile" ;;
+    "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

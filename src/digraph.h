@@ -63,41 +63,47 @@ class digraph_maps {
         static const char* numseq2;
         static const char* charseq1;
         static const char* charseq2;
-        static digraph_compress_map_t   numeric_map;
-        static digraph_uncompress_map_t letter_map;
+        static digraph_uncompress_map_t   numeric_uncompress_map;
+        static digraph_compress_map_t   numeric_compress_map;
+        static digraph_uncompress_map_t letter_uncompress_map;
 
-        static bool numeric_map_init;
-        static bool letter_map_init;
+        static bool numeric_compress_map_init;
+        static bool numeric_uncompress_map_init;
+        static bool letter_uncompress_map_init;
 
     public:
-        static digraph_compress_map_t* get_numeric_map();
-        static digraph_uncompress_map_t* get_letter_map();
+        static digraph_compress_map_t* get_numeric_compress_map();
+        static digraph_uncompress_map_t* get_numeric_uncompress_map();
+        static digraph_uncompress_map_t* get_letter_uncompress_map();
 };
 
 
 class digraph_compress_buf: public std::streambuf {
 protected:
-    digraph_compress_map_t *map;
+    digraph_compress_map_t *m_map;
     std::streambuf&         s_buf;
     traits_type::int_type   tmp_char;
     virtual traits_type::int_type overflow( int_type c = traits_type::eof() );
+    int sync();
 public:
-    digraph_compress_buf(std::streambuf& buf):
-        s_buf(buf), tmp_char(0){
-            map = digraph_maps::get_numeric_map();
-        };
+    digraph_compress_buf(std::streambuf& buf, digraph_compress_map_t *map):
+        s_buf(buf), m_map(map), tmp_char(0) {};
 };
 
 
 class digraph_uncompress_buf: public std::streambuf {
 protected:
-    digraph_uncompress_map_t *map;
-    std::streambuf&         s_buf;
-    virtual traits_type::int_type overflow( int_type c = traits_type::eof() );
+    digraph_uncompress_map_t *m_map;
+    std::streambuf&           s_buf;
+    virtual traits_type::int_type underflow();
+    virtual traits_type::int_type uflow();
+    traits_type::int_type   tmp_char[2];
+    int                     num_tmp;
 public:
-    digraph_uncompress_buf(std::streambuf& buf):
-        s_buf(buf){
-            map = digraph_maps::get_letter_map();
+    digraph_uncompress_buf(std::streambuf& buf, digraph_uncompress_map_t *map):
+        s_buf(buf), m_map(map), num_tmp(0)  { 
+            setg(0,0,0);
+            tmp_char[0] = tmp_char[1] = 0;
         };
 };
 

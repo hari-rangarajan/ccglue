@@ -23,9 +23,9 @@ void parse_options (int argc, char **argv, ccglue_opts *opts)
     //
     // Define arguments
     //
-    TCLAP::SwitchArg verboseSwitch("v","verbose", 
+    TCLAP::SwitchArg verbose_switch("v","verbose", 
             "Produce verbose output", cmd, false);
-    TCLAP::SwitchArg quietSwitch("q","quiet", 
+    TCLAP::SwitchArg quiet_switch("q","quiet", 
             "Don't produce any output", cmd, false);
     TCLAP::ValueArg<std::string> cscopeFiles("S",
             "cscopefiles",
@@ -50,19 +50,37 @@ void parse_options (int argc, char **argv, ccglue_opts *opts)
             );
     cmd.add(ctagFiles);
 #endif
-    TCLAP::ValueArg<std::string> outputFile ("o", 
+    TCLAP::ValueArg<std::string> output_file ("o", 
             "output", 
             "Output to FILE ( - for standard output). Default: ccglue.out",
             false,
             "ccglue.out",
-            "FILE"
+            "OUTPUT_FILE"
             );
-    cmd.add(outputFile);
+    cmd.add(output_file);
+    
+    TCLAP::SwitchArg build_index_file ("I","build-index", 
+            "Build cross-reference tag file index. For use with ccglue_tracer.", cmd, false);
+    
+    TCLAP::ValueArg<std::string> output_index_file ("i", 
+            "index-file", 
+            "Index file name. Default: [OUTPUT_FILE].idx (i.e., ccglue.out.idx)",
+            false,
+            "",
+            "INDEX_FILE"
+            );
+    cmd.add(output_index_file);
 
     cmd.parse(argc, argv);
-    opts->verbose = verboseSwitch.getValue(); 
-    opts->silent = quietSwitch.getValue(); 
-    opts->output_file = outputFile.getValue(); 
+    opts->verbose = verbose_switch.getValue(); 
+    opts->silent = quiet_switch.getValue(); 
+    opts->output_file = output_file.getValue(); 
+    opts->output_index_file = output_index_file.getValue(); 
+    opts->build_index_file = build_index_file.getValue(); 
+
+    if (opts->output_index_file.empty() && opts->build_index_file) {
+        opts->output_index_file = opts->output_file + ".idx";
+    }
     misc_utils::string_split(cscopeFiles.getValue(), ',', opts->cscope_dbs);
 }
 

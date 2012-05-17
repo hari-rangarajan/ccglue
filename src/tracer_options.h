@@ -20,34 +20,27 @@
  *
  */
 
-#include <iostream>
-#include "options.h"
-#include "sym_mgr.h"
-#include "c_glue.h"
-#include "tclap/CmdLine.h"
+#ifndef OPTIONS_TRACER_H
+#define OPTIONS_TRACER_H
 
-int main (int argc, char **argv)
-{
-    ccglue_opts  opts;
-    sym_table    a_sym_table;
+#include <string>
+#include <vector>
+#include "typedefs.h"
 
-    /* Parse our arguments; every option seen by parse_opt will
-       be reflected in arguments. */
-    try {
-        ccglue_parse_command_line_options(argc, argv, &opts);
-    }
-    catch ( TCLAP::ArgException& e ) { 
-        std::cout << "ERROR: " << e.error() << " " << e.argId() << std::endl; 
-    }
-    
-    try {
-        process_cscope_files_to_build_sym_table(a_sym_table, opts.cscope_dbs);
-        process_cscope_files_to_build_xrefs(a_sym_table, opts.cscope_dbs);
-        a_sym_table.write_xref_tag_file(opts.output_file, opts.output_index_file);
-    }
-    catch (std::exception& e) {
-        std::cerr << e.what() << "\n";
-    }
-    return 0;
-}
+class ccglue_tracer_opts {
+    public:
+        std::string              symbol;
+        char                     direction;
+        int                      max_tree_depth;
+
+        std::string              xref_tag_file;
+        std::string              index_file;
+
+        bool                     silent;
+        bool                     verbose;
+};
+
+int ccglue_tracer_parse_command_line_options (int argc,
+        char **argv, ccglue_tracer_opts* opts);
+#endif
 

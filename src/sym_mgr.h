@@ -8,6 +8,7 @@
 #include <tr1/unordered_map>
 #include "typedefs.h"
 #include "tag_file_writer.h"
+#include "indexed_fstream.h"
 #include <functional>
 
 class sym_table;
@@ -45,6 +46,10 @@ class sym_table {
 	uint32                                               m_monotonic_id;
         hash_map_sym                                         m_hash_names;
         std::vector<sym_entry *>                             m_array_sym;
+        
+        void assign_unique_ids_to_symbols();
+        void uncompress_symbol_names();
+        void prepare_to_serialize();
     public:
         RC_t init();
         sym_table();
@@ -54,11 +59,13 @@ class sym_table {
         bool add_sym(sym_entry* a_sym_entry);
         sym_entry* lookup(const char *sym_name);
         sym_entry* lookup (const std::string& sym_name);
-        void write_xref_tag_file(const std::string& filename);
+        void write_xref_tag_file(const std::string& filename, 
+                const std::string& index_fname);
         void write_syms_as_tags_to_file(tag_file_writer& file);
+        void write_syms_as_tags_to_file_with_idx (tag_file_writer& file,
+                indexed_ofstream& idx_file);
         void mark_xref(sym_entry* in_func, sym_entry *ref_func);
-        void assign_unique_ids_to_symbols();
-        void prepare_to_serialize();
+
 };
 
 
@@ -92,7 +99,7 @@ class sym_entry {
         const std::list<sym_entry*>& get_c() const {return m_c;};
         const std::list<sym_entry_loc>& get_l() const {return m_sym_loc;};
         void mark_p(sym_entry *p);
-        void mark_c(sym_entry *p);
+        void mark_c(sym_entry *c);
         RC_t set(const char *sym_name, uint32 uid);
         friend bool sym_entry_cmp(sym_entry *sym1, 
                 sym_entry *sym2);

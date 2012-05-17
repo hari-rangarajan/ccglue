@@ -32,7 +32,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = ccglue$(EXEEXT)
+bin_PROGRAMS = ccglue$(EXEEXT) ccglue_tracer$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -51,10 +51,13 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ccglue_OBJECTS = options.$(OBJEXT) cscoperdr.$(OBJEXT) \
 	sym_mgr.$(OBJEXT) digraph.$(OBJEXT) main.$(OBJEXT) \
-	c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) debug.$(OBJEXT) \
-	misc_util.$(OBJEXT)
+	c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) misc_util.$(OBJEXT)
 ccglue_OBJECTS = $(am_ccglue_OBJECTS)
 ccglue_LDADD = $(LDADD)
+am_ccglue_tracer_OBJECTS = tracer_options.$(OBJEXT) tracer.$(OBJEXT) \
+	digraph.$(OBJEXT)
+ccglue_tracer_OBJECTS = $(am_ccglue_tracer_OBJECTS)
+ccglue_tracer_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -64,8 +67,8 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-SOURCES = $(ccglue_SOURCES)
-DIST_SOURCES = $(ccglue_SOURCES)
+SOURCES = $(ccglue_SOURCES) $(ccglue_tracer_SOURCES)
+DIST_SOURCES = $(ccglue_SOURCES) $(ccglue_tracer_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -155,7 +158,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ccglue_SOURCES = options.cpp cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp debug.cpp misc_util.cpp
+ccglue_SOURCES = options.cpp cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp misc_util.cpp
+ccglue_tracer_SOURCES = tracer_options.cpp tracer.cpp digraph.cpp
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 all: all-am
 
@@ -231,6 +235,9 @@ clean-binPROGRAMS:
 ccglue$(EXEEXT): $(ccglue_OBJECTS) $(ccglue_DEPENDENCIES) $(EXTRA_ccglue_DEPENDENCIES) 
 	@rm -f ccglue$(EXEEXT)
 	$(CXXLINK) $(ccglue_OBJECTS) $(ccglue_LDADD) $(LIBS)
+ccglue_tracer$(EXEEXT): $(ccglue_tracer_OBJECTS) $(ccglue_tracer_DEPENDENCIES) $(EXTRA_ccglue_tracer_DEPENDENCIES) 
+	@rm -f ccglue_tracer$(EXEEXT)
+	$(CXXLINK) $(ccglue_tracer_OBJECTS) $(ccglue_tracer_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -240,13 +247,14 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_glue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cscoperdr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/digraph.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/misc_util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/options.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sym_mgr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tag_file_writer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tracer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tracer_options.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

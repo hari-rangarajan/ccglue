@@ -39,6 +39,12 @@ tag_file_writer::~tag_file_writer()
     tagfile.close();
 }
 
+std::streampos tag_file_writer::get_file_pos ()
+{
+    return tagfile.tellp();
+}
+
+
 void tag_file_writer::write_xref_tag_header ()
 {
     tagfile << "!_TAG_FILE_FORMAT\t2\t/extended format; --format=1 will not append ;\" to lines/\n";
@@ -49,15 +55,13 @@ void tag_file_writer::write_xref_tag_header ()
 
 void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry) 
 {
-    digraph_compress_buf    compress_buf(*(tagfile.rdbuf()));
-    std::ostream            compress_stream(&compress_buf);
     std::stringstream       sstream;
-    digraph_uncompress_buf  uncompress_buf(*(sstream.rdbuf()));
-    std::ostream            uncompress_stream(&uncompress_buf);
 
-    uncompress_stream << a_sym_entry->get_n();
+    digraph_compress_buf    compress_buf(*(tagfile.rdbuf()),
+                                           digraph_maps::get_numeric_compress_map());
+    std::ostream            compress_stream(&compress_buf);
 
-    tagfile << a_sym_entry->get_uid() << "#" << sstream.str();
+    tagfile << a_sym_entry->get_uid() << "#" << a_sym_entry->get_n();
     
     std::list<sym_entry *>::const_iterator   iter;
 
@@ -68,12 +72,15 @@ void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry)
     for (iter = a_sym_entry->get_c().begin(); iter != a_sym_entry->get_c().end(); iter++) {
         compress_stream << (*iter)->get_uid() << ",";
     }
-
+    compress_stream.flush();
     tagfile << "\tp:";
 
     for (iter = a_sym_entry->get_p().begin(); iter != a_sym_entry->get_p().end(); iter++) {
         compress_stream << (*iter)->get_uid() << ",";
+        //tagfile << (*iter)->get_uid() << ",";
     }
+    compress_stream.flush();
+    
     
 #if 0
     tagfile << "\tl:";

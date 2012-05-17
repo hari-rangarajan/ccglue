@@ -1,7 +1,8 @@
 #include "debug.h"
 #include "tagfilerdr.h"
 
-int main() {
+int main() 
+{
     tag_t mytag;
     tag_file_rdr *tagrdr = new tag_file_rdr;
 
