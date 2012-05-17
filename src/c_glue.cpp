@@ -30,25 +30,18 @@
 #include "cscoperdr.h"
 
 void process_files_with_reader (generic_db_rdr& reader, sym_table& a_sym_table, 
-        std::vector<std::string>& db_files)
+        std::vector<std::string>& db_files, generic_db_scanner& scanner)
 {
-    char		                line[1024];
     std::ifstream                       db_file;
     std::vector<std::string>::iterator  it;
 
     /* need to copy before we try tokenizing */
     for (it = db_files.begin(); it < db_files.end(); it++) {
-        db_file.open((*it).c_str(), std::ios::in | std::ios::binary);
+        db_file.open((*it).c_str(), std::ios::in);
         if (db_file.fail()) {
             throw std::runtime_error("Failed to open " + *it);
         }
-        while (!db_file.eof()) {
-            db_file.getline(line, sizeof(line));
-            reader.process_line(a_sym_table, line);
-            if (db_file.bad()) {
-                throw std::runtime_error("Error reading " + *it);
-            }
-        }
+        reader.process_line(a_sym_table, db_file, scanner);
         db_file.close();
     }
     return;
@@ -58,16 +51,20 @@ void process_files_with_reader (generic_db_rdr& reader, sym_table& a_sym_table,
 RC_t process_cscope_files_to_build_sym_table (sym_table& a_sym_table, 
         std::vector<std::string>& cscope_files)
 {
+    cscope_db_symbol_scanner  sym_scanner;
     cscope_db_rdr rdr;
-    rdr.set_scan_action(ACTION_LOAD_SYMS);
-    process_files_with_reader(rdr, a_sym_table, cscope_files);
+
+    sym_scanner.initialize_rules();
+    process_files_with_reader(rdr, a_sym_table, cscope_files, sym_scanner);
 }
 
 RC_t process_cscope_files_to_build_xrefs (sym_table& a_sym_table,
         std::vector<std::string>& cscope_files)
 {
+    cscope_db_xref_scanner  xref_scanner;
     cscope_db_rdr rdr;
-    rdr.set_scan_action(ACTION_XREF_SYMS);
-    process_files_with_reader(rdr, a_sym_table, cscope_files);
+
+    xref_scanner.initialize_rules();
+    process_files_with_reader(rdr, a_sym_table, cscope_files, xref_scanner);
 }
 

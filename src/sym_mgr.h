@@ -53,6 +53,7 @@ class sym_table {
         uint32 get_new_id();
         bool add_sym(sym_entry* a_sym_entry);
         sym_entry* lookup(const char *sym_name);
+        sym_entry* lookup (const std::string& sym_name);
         void write_xref_tag_file(const std::string& filename);
         void write_syms_as_tags_to_file(tag_file_writer& file);
         void mark_xref(sym_entry* in_func, sym_entry *ref_func);
@@ -60,20 +61,36 @@ class sym_table {
         void prepare_to_serialize();
 };
 
+
+typedef unsigned int sym_loc_line_number_t;
+
+class sym_entry_loc {
+    public:
+        sym_entry_loc (sym_entry *, sym_loc_line_number_t);
+        sym_entry*  get_sym_entry();
+        sym_loc_line_number_t get_line_num();
+    private:
+        sym_entry*                      m_entry;
+        sym_loc_line_number_t           m_line_num;
+};
+
 class sym_entry {
     protected:
-	uint32                  m_uid;
-	std::string             m_n;
-        std::list<sym_entry *>  m_p;
-        std::list<sym_entry *>  m_c;
+	uint32                      m_uid;
+	std::string                 m_n;
+        std::list<sym_entry *>      m_p;
+        std::list<sym_entry *>      m_c;
+        std::list<sym_entry_loc>    m_sym_loc;
 	
     public:
         sym_entry (const char *name);
+        sym_entry (const std::string& name);
         ~sym_entry ();
         uint32 get_uid() const {return m_uid;};
         const std::string& get_n() const {return m_n;};
         const std::list<sym_entry*>& get_p() const {return m_p;};
         const std::list<sym_entry*>& get_c() const {return m_c;};
+        const std::list<sym_entry_loc>& get_l() const {return m_sym_loc;};
         void mark_p(sym_entry *p);
         void mark_c(sym_entry *p);
         RC_t set(const char *sym_name, uint32 uid);

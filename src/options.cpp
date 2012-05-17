@@ -63,7 +63,7 @@ void parse_options (int argc, char **argv, ccglue_opts *opts)
     opts->verbose = verboseSwitch.getValue(); 
     opts->silent = quietSwitch.getValue(); 
     opts->output_file = outputFile.getValue(); 
-    string_split(cscopeFiles.getValue(), ',', opts->cscope_dbs);
+    misc_utils::string_split(cscopeFiles.getValue(), ',', opts->cscope_dbs);
 }
 
 int ccglue_parse_command_line_options (int argc, char **argv,

@@ -44,30 +44,12 @@ void sym_table::destroy()
         delete *it;
     }
     m_array_sym.clear();
-
-#if 0
-    g_hash_table_foreach(m_hash_names, 
-            sym_name_data_free_iterator, NULL);
-#endif
 }
 
 sym_table::~sym_table()
 {
     destroy();
-   // g_array_free(m_array_sym, TRUE);
-   // g_hash_table_destroy(m_hash_names);
 }
-
-#if 0
-void sym_table::sym_name_data_free_iterator (gpointer key,
-        gpointer value, gpointer user_data)
-{
-    free((uchar *) key);
-    //((sym_entry *) value)->destroy();
-    delete (sym_entry *) value;
-}
-#endif
-
 
 uint32 sym_table::get_new_id ()
 {
@@ -88,17 +70,21 @@ bool sym_table::add_sym (sym_entry* a_sym_entry)
     return true;
 }
 
+sym_entry* sym_table::lookup (const std::string& sym_name)
+{
+    lookup(sym_name.c_str());
+}
 
 sym_entry* sym_table::lookup (const char *sym_name)
 {
-        hash_map_sym::const_iterator sym_entries_iterator;
+    hash_map_sym::const_iterator sym_entries_iterator;
 
-	sym_entries_iterator = m_hash_names.find(sym_name);
-        
-        if (sym_entries_iterator == m_hash_names.end()) {
-            return NULL;
-        } 
-	return (sym_entries_iterator->second);
+    sym_entries_iterator = m_hash_names.find(sym_name);
+
+    if (sym_entries_iterator == m_hash_names.end()) {
+        return NULL;
+    } 
+    return (sym_entries_iterator->second);
 }
 
 
@@ -145,6 +131,12 @@ void sym_table::write_syms_as_tags_to_file (tag_file_writer& file)
 
 // Sym entry routines
 
+sym_entry::sym_entry (const std::string& name):
+    m_n(name), m_uid(0)
+{
+
+}
+
 sym_entry::sym_entry (const char *name):
     m_n(name), m_uid(0)
 {
@@ -168,8 +160,23 @@ void sym_entry::mark_c (sym_entry *c)
 							
 void sym_table::mark_xref (sym_entry *in_func, sym_entry *ref_func) 
 {
-	in_func->mark_c(ref_func);
-	ref_func->mark_p(in_func);
+    in_func->mark_c(ref_func);
+    ref_func->mark_p(in_func);
 }
 	
+sym_entry_loc::sym_entry_loc (sym_entry* sentry, sym_loc_line_number_t line_num):
+    m_entry(sentry), m_line_num(line_num)
+{
+}
+
+sym_entry*  sym_entry_loc::get_sym_entry()
+{
+    return m_entry;
+}
+
+sym_loc_line_number_t sym_entry_loc::get_line_num()
+{
+    return m_line_num;
+}
+
 
