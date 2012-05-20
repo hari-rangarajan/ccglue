@@ -183,6 +183,10 @@ void cscope_db_symbol_scanner::initialize_rules ()
 
 void cscope_db_xref_scanner::initialize_rules()
 {
+    rules_.add("INITIAL", "^\\n", 1017, ".");
+    rules_.add("INITIAL", "\\n", 1018, ".");
+    rules_.add("INITIAL", "^\\d+", cscope_token_ids::line_number, 
+            ">LINE_NO_START");
     rules_.add("INITIAL", "^[^\\t\\d]", ">LINE_NO_START");
     rules_.add("INITIAL", "^\\t", sm_.skip(), ">TAB_START");
 
@@ -201,31 +205,34 @@ void cscope_db_xref_scanner::initialize_rules()
     //#
     rules_.add("TAB_START", cscope_db_tags::begin_macro.get_tag_marker(), 
             cscope_db_tags::begin_macro.get_tag_id(), ">SYMBOL_TOKEN");
-    //) (end of macro)
-    rules_.add("TAB_START", cscope_db_tags::end_macro.get_tag_marker(), 
-            cscope_db_tags::end_macro.get_tag_id(), "<");
     // $
     rules_.add("TAB_START", cscope_db_tags::function_def.get_tag_marker(), 
             cscope_db_tags::function_def.get_tag_id(), ">SYMBOL_TOKEN");
+    // ~ (include file ")
+    rules_.add("TAB_START", cscope_db_tags::include_file.get_tag_marker(), 
+            cscope_db_tags::include_file.get_tag_id(), ">SYMBOL_TOKEN");
+    // ~< (include file sys)
+    rules_.add("TAB_START", cscope_db_tags::include_file_sys.get_tag_marker(), 
+            cscope_db_tags::include_file_sys.get_tag_id(), ">SYMBOL_TOKEN");
+    // ' (xref call)
+    rules_.add("TAB_START", cscope_db_tags::function_call.get_tag_marker(), 
+            cscope_db_tags::function_call.get_tag_id(), ">SYMBOL_TOKEN");
+    
     // } (end of function)
     rules_.add("TAB_START", cscope_db_tags::function_end.get_tag_marker(), 
             cscope_db_tags::function_end.get_tag_id(), "<");
-    // ~ (include file ")
-    rules_.add("TAB_START", cscope_db_tags::include_file.get_tag_marker(), 
-            cscope_db_tags::include_file.get_tag_id(), "<");
-    // ~< (include file sys)
-    rules_.add("TAB_START", cscope_db_tags::include_file_sys.get_tag_marker(), 
-            cscope_db_tags::include_file_sys.get_tag_id(), "<");
-    // ' (xref call)
-    rules_.add("TAB_START", cscope_db_tags::function_call.get_tag_marker(), 
-            cscope_db_tags::function_call.get_tag_id(), "<");
-    
+    //) (end of macro)
+    rules_.add("TAB_START", cscope_db_tags::end_macro.get_tag_marker(), 
+            cscope_db_tags::end_macro.get_tag_id(), "<");
+    rules_.add("TAB_START", ".", sm_.skip(), ">SYMBOL_TOKEN");
 
-    rules_.add("SYMBOL_TOKEN", ".+", cscope_token_ids::symbol, "<");
+    rules_.add("TAB_START", "\\n", 1017, "<");
 
-    rules_.add("INITIAL", "^\\d+", cscope_token_ids::line_number, 
-            ">LINE_NO_START");
 
+    rules_.add("SYMBOL_TOKEN", "[^\\n]+", cscope_token_ids::symbol, "<");
+
+
+#if 0
     std::vector<std::string>    keyword_list;
 
     if (misc_utils::read_string_vector_from_file("keywords_c.txt", keyword_list)
@@ -240,11 +247,13 @@ void cscope_db_xref_scanner::initialize_rules()
             rules_.add("LINE_NO_START", *it, cscope_token_ids::keyword, ".");
         }
     }
+#endif
 
-    rules_.add("LINE_NO_START", "\\s+", sm_.skip(), ".");
-    rules_.add("LINE_NO_START", "\\W+", sm_.skip(), ".");
-    rules_.add("LINE_NO_START", "\\w+", cscope_token_ids::symbol, ".");
-    rules_.add("LINE_NO_START", "$", sm_.skip(), "<");
+    rules_.add("LINE_NO_START", "\\n", 1010, "<");
+    //rules_.add("LINE_NO_START", "\\s+", 1011,  ".");
+    //rules_.add("LINE_NO_START", "\\S+", 1012, ".");
+    rules_.add("LINE_NO_START", "[^\\w\\n\\.]", 1012, ".");
+    rules_.add("LINE_NO_START", ".+", cscope_token_ids::symbol, ".");
     
     lexertl::generator::build (rules_, sm_);
 }
@@ -280,7 +289,7 @@ std::size_t>
     do
     {
         lexertl::lookup (scanner.get_state_machine(), results);
-        //std::cout << "Id: " << results.id << ", Token: '" << std::string (results.start, results.end) << "'\n";
+        std::cout << "Id: " << results.id << ", Token: '" << std::string (results.start, results.end) << "'\n";
         std::string s(results.start, results.end);
         build_syms_from_token(a_sym_table, 
                 results.id, s);
@@ -331,7 +340,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
             case cscope_tag_marker_ids::function_call:
                 ref_func = create_sym_entry_or_lookup(a_sym_table, token);
                 if (ctxt.m_in_macro && ref_func) {
-                    a_sym_table.mark_xref(ctxt.m_in_macro, ref_func);
+                    a_sym_table.mark_xref(ctxt.m_in_macro, ref_func, ctxt.m_in_file, ctxt.m_line_num);
                 }
                 break;
             default:
@@ -342,7 +351,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
             case cscope_tag_marker_ids::function_call:
                 ref_func = create_sym_entry_or_lookup(a_sym_table, token);
                 if (ctxt.m_in_func && ref_func) {
-                    a_sym_table.mark_xref(ctxt.m_in_func, ref_func);
+                    a_sym_table.mark_xref(ctxt.m_in_func, ref_func, ctxt.m_in_file, ctxt.m_line_num);
                 }
                 break;
             case cscope_tag_marker_ids::function_end:
@@ -365,7 +374,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
             case cscope_tag_marker_ids::include_file:
                 ref_file = create_sym_entry_or_lookup(a_sym_table,token);
                 if (ref_file && ctxt.m_in_file) {
-                    a_sym_table.mark_xref(ctxt.m_in_file, ref_file);
+                    a_sym_table.mark_xref(ctxt.m_in_file, ref_file, ctxt.m_in_file, ctxt.m_line_num);
                 }
                 break;
             case cscope_tag_marker_ids::start_of_file:
@@ -390,15 +399,16 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
                     return;
                 }
                 if (ctxt.m_in_macro) {
-                    a_sym_table.mark_xref(ctxt.m_in_macro, untagged_sym);
+                    a_sym_table.mark_xref(ctxt.m_in_macro, untagged_sym, ctxt.m_in_file, ctxt.m_line_num);
                 } else if (ctxt.m_in_func) {
-                    a_sym_table.mark_xref(ctxt.m_in_func, untagged_sym);
+                    a_sym_table.mark_xref(ctxt.m_in_func, untagged_sym, ctxt.m_in_file, ctxt.m_line_num);
                 }
             }
             break;
         case cscope_token_ids::line_number:
             {
                 ctxt.m_line_num = misc_utils::atoi<int>(token);
+                std::cout << "processing line " << ctxt.m_line_num << "\n";
             }
             break;
 

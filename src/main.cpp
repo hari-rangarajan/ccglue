@@ -42,6 +42,7 @@ int main (int argc, char **argv)
     
     try {
         process_cscope_files_to_build_sym_table(a_sym_table, opts.cscope_dbs);
+        std::cout << "built sym table\n";
         process_cscope_files_to_build_xrefs(a_sym_table, opts.cscope_dbs);
         a_sym_table.write_xref_tag_file(opts.output_file, opts.output_index_file);
     }

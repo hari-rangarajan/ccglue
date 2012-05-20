@@ -40,6 +40,7 @@ struct elf_hash_32bit : std::unary_function< const char *, std::size_t >
 //typedef std::tr1::unordered_map<const char *, sym_entry*, elf_hash_32bit> hash_map_sym;
 typedef std::tr1::unordered_map<std::string , sym_entry*> hash_map_sym;
 
+typedef unsigned int sym_loc_line_number_t;
 
 class sym_table {
     protected:
@@ -64,18 +65,20 @@ class sym_table {
         void write_syms_as_tags_to_file(tag_file_writer& file);
         void write_syms_as_tags_to_file_with_idx (tag_file_writer& file,
                 indexed_ofstream& idx_file);
-        void mark_xref(sym_entry* in_func, sym_entry *ref_func);
+        void mark_xref (sym_entry *in_func, sym_entry *ref_func, 
+                    sym_entry *file, sym_loc_line_number_t line_num);
 
 };
 
 
-typedef unsigned int sym_loc_line_number_t;
 
-class sym_entry_loc {
+class sym_entry_xref {
     public:
-        sym_entry_loc (sym_entry *, sym_loc_line_number_t);
-        sym_entry*  get_sym_entry();
-        sym_loc_line_number_t get_line_num();
+        sym_entry_xref (sym_entry *, sym_entry *file, 
+                                        sym_loc_line_number_t);
+        const sym_entry*  get_sym_entry() const;
+        const sym_entry*  get_sym_entry() const;
+        sym_loc_line_number_t get_line_num() const;
     private:
         sym_entry*                      m_entry;
         sym_loc_line_number_t           m_line_num;
@@ -87,7 +90,8 @@ class sym_entry {
 	std::string                 m_n;
         std::list<sym_entry *>      m_p;
         std::list<sym_entry *>      m_c;
-        std::list<sym_entry_loc>    m_sym_loc;
+        std::list<sym_entry_loc>    m_p_sym_loc;
+        std::list<sym_entry_loc>    m_c_sym_loc;
 	
     public:
         sym_entry (const char *name);
@@ -97,9 +101,12 @@ class sym_entry {
         const std::string& get_n() const {return m_n;};
         const std::list<sym_entry*>& get_p() const {return m_p;};
         const std::list<sym_entry*>& get_c() const {return m_c;};
-        const std::list<sym_entry_loc>& get_l() const {return m_sym_loc;};
-        void mark_p(sym_entry *p);
-        void mark_c(sym_entry *c);
+        const std::list<sym_entry_loc>& get_pl() const {return m_p_sym_loc;};
+        const std::list<sym_entry_loc>& get_cl() const {return m_c_sym_loc;};
+        void mark_c (sym_entry *c, sym_entry *file, 
+                                    sym_loc_line_number_t line_num);
+        void mark_p (sym_entry *c, sym_entry *file, 
+                                    sym_loc_line_number_t line_num);
         RC_t set(const char *sym_name, uint32 uid);
         friend bool sym_entry_cmp(sym_entry *sym1, 
                 sym_entry *sym2);
