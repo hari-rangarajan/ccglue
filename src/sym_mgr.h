@@ -77,10 +77,11 @@ class sym_entry_xref {
         sym_entry_xref (sym_entry *, sym_entry *file, 
                                         sym_loc_line_number_t);
         const sym_entry*  get_sym_entry() const;
-        const sym_entry*  get_sym_entry() const;
+        const sym_entry*  get_sym_entry_file() const;
         sym_loc_line_number_t get_line_num() const;
     private:
         sym_entry*                      m_entry;
+        sym_entry*                      m_entry_file;
         sym_loc_line_number_t           m_line_num;
 };
 
@@ -88,10 +89,8 @@ class sym_entry {
     protected:
 	uint32                      m_uid;
 	std::string                 m_n;
-        std::list<sym_entry *>      m_p;
-        std::list<sym_entry *>      m_c;
-        std::list<sym_entry_loc>    m_p_sym_loc;
-        std::list<sym_entry_loc>    m_c_sym_loc;
+        std::list<sym_entry_xref *>      m_p;
+        std::list<sym_entry_xref *>      m_c;
 	
     public:
         sym_entry (const char *name);
@@ -99,10 +98,8 @@ class sym_entry {
         ~sym_entry ();
         uint32 get_uid() const {return m_uid;};
         const std::string& get_n() const {return m_n;};
-        const std::list<sym_entry*>& get_p() const {return m_p;};
-        const std::list<sym_entry*>& get_c() const {return m_c;};
-        const std::list<sym_entry_loc>& get_pl() const {return m_p_sym_loc;};
-        const std::list<sym_entry_loc>& get_cl() const {return m_c_sym_loc;};
+        const std::list<sym_entry_xref *>& get_p() const {return m_p;};
+        const std::list<sym_entry_xref *>& get_c() const {return m_c;};
         void mark_c (sym_entry *c, sym_entry *file, 
                                     sym_loc_line_number_t line_num);
         void mark_p (sym_entry *c, sym_entry *file, 

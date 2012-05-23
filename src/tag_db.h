@@ -10,7 +10,7 @@
 #include "lexertl/rules.hpp"
 #include "lexertl/state_machine.hpp"
 #include "lexertl/generator.hpp"
-#include "lexertl/file_shared_iterator.hpp"
+#include "lexertl/stream_shared_iterator.hpp"
 
 struct tag_file_marker_ids {
     enum {
@@ -65,8 +65,6 @@ ccglue_tag_file_scanner::ccglue_tag_file_scanner()
     
     rules_.add("FIELD_MARKER", "c:", tag_file_marker_ids::child_marker, "FIELD_DATA");
     rules_.add("FIELD_MARKER", "p:", tag_file_marker_ids::parent_marker, "FIELD_DATA");
-    rules_.add("FIELD_MARKER", "cl:", tag_file_marker_ids::child_loc_marker, "FIELD_DATA");
-    rules_.add("FIELD_MARKER", "pl:", tag_file_marker_ids::parent_loc_marker, "FIELD_DATA");
     rules_.add("FIELD_DATA", "[^\\t\\n]+", tag_file_marker_ids::field_data, "FIELD_DATA_END");
     rules_.add("FIELD_DATA", "\\t", tag_file_marker_ids::skip_tab, "FIELD_MARKER");
     rules_.add("FIELD_DATA", "\\n", tag_file_marker_ids::end_of_tag, "INITIAL");
@@ -76,35 +74,52 @@ ccglue_tag_file_scanner::ccglue_tag_file_scanner()
     lexertl::generator::build (rules_, sm_);
 }
 
-struct csv_ids {
+tag_file_scanner& get_ccglue_tag_file_scanner ()
+{
+    static ccglue_tag_file_scanner scanner;
+    return scanner;
+}
+
+struct sym_xref_ids {
     enum {
+        none,
         numeric_data = 1,
-        comma_separator,
+        data_sep_pipe,
+        data_sep_comma,
     };
 };
 
-class scanner_csv : public tag_file_scanner {
+class scanner_sym_xref : public tag_file_scanner {
     public:
-        scanner_csv();
+        scanner_sym_xref();
 };
 
-scanner_csv::scanner_csv()
+scanner_sym_xref::scanner_sym_xref()
 {
-    rules_.add_state("DATA");
+    rules_.add_state("SEP");
 
-    rules_.add("INITIAL", "\\d+", csv_ids::numeric_data, "DATA");
-    rules_.add("DATA", ",", sm_.skip(), "INITIAL");
+    rules_.add("INITIAL", "\\d+", sym_xref_ids::numeric_data, "SEP");
+    rules_.add("SEP", "\\|", sym_xref_ids::data_sep_pipe, "INITIAL");
+    rules_.add("SEP", ",", sym_xref_ids::data_sep_comma, "INITIAL");
     
     lexertl::generator::build (rules_, sm_);
 }
 
-lexertl::state_machine& get_scanner_csv() {
-    static scanner_csv  a_csv_scanner;
-    return a_csv_scanner.get_state_machine();
+lexertl::state_machine& get_scanner_sym_xref() {
+    static scanner_sym_xref  a_sym_xref_scanner;
+    return a_sym_xref_scanner.get_state_machine();
 }
 
 typedef unsigned int    tag_id_type_t;
 typedef unsigned char   tag_type_t;
+
+
+struct tag_xref_data {
+    public:
+        tag_id_type_t   sym_id;
+        tag_id_type_t   sym_file_id;
+        tag_id_type_t   sym_line_num;
+};
 
 class tag {
     public:
@@ -114,66 +129,111 @@ class tag {
         void dump (std::ostream& os);
 
         const std::string&                get_symbol_name() const;
-        const std::list<tag_id_type_t>&   get_list_by_direction(int dir) const ;
-        const std::list<tag_id_type_t>&   get_child_list() const ;
-        const std::list<tag_id_type_t>&   get_parent_list() const ;
+        const std::list<tag_xref_data>&   get_list_by_direction(int dir) const ;
+        const std::list<tag_xref_data>&   get_child_list() const ;
+        const std::list<tag_xref_data>&   get_parent_list() const ;
     protected:
         tag_type_t                      m_type;
         tag_id_type_t                   m_id;
         std::string                     m_name;
-        std::list<tag_id_type_t>        m_c;
-        std::list<tag_id_type_t>        m_p;
+        std::list<tag_xref_data>        m_c;
+        std::list<tag_xref_data>        m_p;
 
     private:
         int         last_token_id;
 
         void decode_compressed_list (std::string& buf,
-                                std::list<tag_id_type_t>& lst,
+                                std::list<tag_xref_data>& lst,
                                 lexertl::state_machine& sm);
         bool process_decoded_token (int token_id, std::string& token);
 };
 
 void tag::dump(std::ostream& os)
 {
+#if 0
     os << m_name << std::endl;
     os << "parent links: ";
-    copy(m_p.begin(), m_p.end(), std::ostream_iterator<tag_id_type_t> (os, ","));
+    copy(m_p.begin(), m_p.end(), std::ostream_iterator<tag_xref_data> (os, ","));
     os << "\nchild links: ";
-    copy(m_c.begin(), m_c.end(), std::ostream_iterator<tag_id_type_t> (os, ","));
+    copy(m_c.begin(), m_c.end(), std::ostream_iterator<tag_xref_data> (os, ","));
     os << std::endl;
+#endif
 }
 
 void tag::decode_compressed_list (std::string& buf,
-                                std::list<tag_id_type_t>& lst, 
+                                std::list<tag_xref_data>& lst, 
                                 lexertl::state_machine& sm)
 {
     std::stringstream               oss;
+   // digraph_uncompress_buf          uncompress_buf((*s_buf.rdbuf()), 
+     //                                   digraph_maps::get_numeric_uncompress_map());
+#define TEST 1
+#if TEST
     std::stringstream               s_buf(buf);
-    digraph_uncompress_buf          uncompress_buf((*s_buf.rdbuf()), 
-                                        digraph_maps::get_numeric_uncompress_map());
     
-    std::istream                    ifs(&uncompress_buf);
-    lexertl::file_shared_iterator   iter (ifs);
-    lexertl::file_shared_iterator   end;
-    lexertl::basic_push_match_results<lexertl::file_shared_iterator, std::size_t> 
+   // std::istream                    ifs(&uncompress_buf);
+    std::istream                    ifs(s_buf.rdbuf());
+    lexertl::stream_shared_iterator   iter (ifs);
+    lexertl::stream_shared_iterator   end;
+    lexertl::basic_match_results<lexertl::stream_shared_iterator, std::size_t> 
                                                                 results(iter, end);
 
+#else
+    std::string::const_iterator iter_ = buf.begin();
+    std::string::const_iterator end_ = buf.end ();
+    lexertl::match_results results (iter_, end_);
+#endif
+
+    int last_token  = sym_xref_ids::none;
+    tag_xref_data   xref_data;
+
+    enum {
+        sym_id=1,
+        sym_file_id,
+        sym_line_num
+    };
+
+    int expected_token = sym_xref_ids::numeric_data;
+    int pipe_count = 0;
     do
     {
         lexertl::lookup (sm, results);
         std::string s(results.start, results.end);
-        std::cout << "CSV Id: " << results.id << ", Token: '" << s << "'\n";
+        //std::cout << "sym_xref Id: " << results.id << ", Token: '" << s << "'\n";
         switch (results.id) {
-        case csv_ids::numeric_data:
-#if 0
-            int id = misc_utils::atoi<int>(s);
-            if (id == 32767) {
-                std::cout << "trouble brewing";
+        case sym_xref_ids::numeric_data:
+            switch (expected_token) {
+            case sym_id:
+                xref_data.sym_id = misc_utils::atoi<int>(s);
+                expected_token = sym_xref_ids::data_sep_pipe;
+                break;
+            case sym_file_id:
+                xref_data.sym_file_id = misc_utils::atoi<int>(s);
+                expected_token = sym_xref_ids::data_sep_pipe;
+                break;
+            case sym_line_num:
+                xref_data.sym_line_num = misc_utils::atoi<int>(s);
+                expected_token = sym_xref_ids::data_sep_comma;
+                lst.push_back(xref_data);
+                break;
+            default:
+                break;
             }
-#endif
-            lst.push_back(misc_utils::atoi<int>(s));
             break;
-        default:
+        case sym_xref_ids::data_sep_pipe:
+            switch(pipe_count) {
+            case 0:
+                expected_token = sym_file_id;
+                break;
+            case 1:
+                expected_token = sym_line_num;
+                break;
+            }
+            pipe_count++;
+            break;
+        case sym_xref_ids::data_sep_comma:
+            expected_token = sym_id;
+            pipe_count = 0;
             break;
         }
     } while (results.id != 0 && results.id != results.npos ());
@@ -205,9 +265,7 @@ void tag::decode_compressed_list (std::string& buf,
 
 tag::tag (std::streambuf* s_buf)
 {
-    ccglue_tag_file_scanner scanner;
-
-    decode_from_stream(s_buf, scanner);
+    decode_from_stream(s_buf, get_ccglue_tag_file_scanner());
 }
 
 void tag::decode_from_stream (std::streambuf* s_buf, tag_file_scanner& scanner)
@@ -223,9 +281,9 @@ void tag::decode_from_stream (std::streambuf* s_buf, tag_file_scanner& scanner)
 #endif
 #if 1
     std::istream            ifs(s_buf);
-    lexertl::file_shared_iterator iter (ifs);
-    lexertl::file_shared_iterator end;
-    lexertl::basic_push_match_results<lexertl::file_shared_iterator,
+    lexertl::stream_shared_iterator iter (ifs);
+    lexertl::stream_shared_iterator end;
+    lexertl::basic_match_results<lexertl::stream_shared_iterator,
 std::size_t>
       results(iter, end);
 #endif
@@ -234,7 +292,7 @@ std::size_t>
     {
         lexertl::lookup (scanner.get_state_machine(), results);
         std::string s(results.start, results.end);
-        std::cout << "Id: " << results.id << ", Token: '" << s << "'\n";
+        //std::cout << "Id: " << results.id << ", Token: '" << s << "'\n";
         process_decoded_token(results.id, s);
     } while (results.id != 0 && results.id != results.npos ());
 }
@@ -264,7 +322,7 @@ bool tag::process_decoded_token (int token_id, std::string& token)
     case tag_file_marker_ids::child_marker:
         switch (token_id) {
         case tag_file_marker_ids::field_data:
-            decode_compressed_list(token, m_c, get_scanner_csv());
+            decode_compressed_list(token, m_c, get_scanner_sym_xref());
             break;
         default:
             return false;
@@ -273,7 +331,7 @@ bool tag::process_decoded_token (int token_id, std::string& token)
     case tag_file_marker_ids::parent_marker:
         switch (token_id) {
         case tag_file_marker_ids::field_data:
-            decode_compressed_list(token, m_p, get_scanner_csv());
+            decode_compressed_list(token, m_p, get_scanner_sym_xref());
             break;
         default:
             return false;
@@ -299,17 +357,17 @@ bool tag::process_decoded_token (int token_id, std::string& token)
     last_token_id = token_id;
 }
 
-const std::list<tag_id_type_t>&   tag::get_parent_list() const
+const std::list<tag_xref_data>&   tag::get_parent_list() const
 {
     return m_p;
 }
 
-const std::list<tag_id_type_t>&   tag::get_child_list() const
+const std::list<tag_xref_data>&   tag::get_child_list() const
 {
     return m_c;
 }
         
-const std::list<tag_id_type_t>&   tag::get_list_by_direction(int dir) const
+const std::list<tag_xref_data>&   tag::get_list_by_direction(int dir) const
 {
     if (dir == ccglue::trace_direction::forward) {
         return m_c;
@@ -323,6 +381,32 @@ const std::string&  tag::get_symbol_name() const
     return m_name;
 }
 
+class tag_cache {
+    public:
+        void store_tag_id (tag_id_type_t id, const tag* entry) {
+            tags[id] = entry;
+        }
+        const tag* retrieve_tag_id (tag_id_type_t id) {
+            hash_tags::const_iterator tag_entries_iterator;
+
+            tag_entries_iterator = tags.find(id);
+
+            if (tag_entries_iterator == tags.end()) {
+                return NULL;
+            } 
+            return (tag_entries_iterator->second);
+        }
+        ~tag_cache () {
+            for (hash_tags::const_iterator it = tags.begin(); it != tags.end();
+                    it++) {
+                delete (*it).second;
+            }
+            tags.erase(tags.begin(), tags.end());
+        }
+    protected:
+        typedef std::tr1::unordered_map<tag_id_type_t, const tag *> hash_tags;
+        hash_tags                       tags;
+};
 
 class tag_db {
     public:
@@ -332,11 +416,12 @@ class tag_db {
             {};
         tag* get_tag_line (std::string tag_name);
         tag* get_tag_from_stream (std::streambuf * buf);
-        tag* get_tag_by_id (int id);
+        const tag* get_tag_by_id (int id);
         void dmp_all();
     protected:
         std::ifstream                   m_data_file;
         indexed_ifstream_vector<int>    ifs_db;
+        tag_cache                       cache;
 };
 
 void tag_db::dmp_all ()
@@ -360,17 +445,20 @@ tag* tag_db::get_tag_from_stream (std::streambuf * buf)
 
     tag *atag = new tag;
     /* create a constructor here */
-    ccglue_tag_file_scanner scanner;
-    atag->decode_from_stream(&b_sbuf, scanner);
+    atag->decode_from_stream(&b_sbuf, get_ccglue_tag_file_scanner());
 
     return atag;
 }
 
-tag* tag_db::get_tag_by_id (int id) 
+const tag* tag_db::get_tag_by_id (int id) 
 {
-    index_record_t  rec;
-    std::streambuf*  buf = ifs_db[id];
-    return get_tag_from_stream(buf);
+    const tag* entry = cache.retrieve_tag_id(id);
+    if (entry == NULL) {
+        std::streambuf*  buf = ifs_db[id];
+        entry = get_tag_from_stream(buf);
+        cache.store_tag_id(id, entry);
+    } 
+    return entry;
 }
 
 bool my_dummy_func (std::streambuf* s_buf, const std::string& s)

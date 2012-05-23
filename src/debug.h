@@ -1,33 +1,33 @@
-#ifndef DEBUG_H
-#define DEBUG_H
-#include <iostream>
+// debug.hpp
+#ifndef _DEBUG_H_
+#define _DEBUG_H_
 
-class Logger
+#include  <iostream>
+
+// this defines a struct named options and
+// an instance of it called "opts"
+
+struct nullstream : std::ostream
 {
-    public:
-        Logger (std::ostream* os):out_stream(os)
-        {
-        };
-        virtual ~Logger() {};
+  struct nullbuf : std::streambuf
+  {
+    int overflow(int c) { return traits_type::not_eof(c); }
+  } _sbuf;
 
-        template <typename T>
-            inline Logger& Display(T thing)
-            {
-                *out_stream << thing;
-                return *this;
-            }
-
-    private:
-        std::ostream* out_stream;
+  nullstream()
+    : std::ios(&_sbuf), std::ostream(&_sbuf) {}
 };
 
-template <typename T>
-Logger& operator<< (Logger& logger, T thing) 
-{
-    return logger.Display(thing);
-}
+template<class T>
+nullstream& operator<<(nullstream& ns, T)
+{ return ns; }
 
-static Logger *myLogger;
+//extern options opts;
+extern nullstream null;
 
+std::ostream& debug(short level);
+std::ostream& warn();
+std::ostream& error();
 
 #endif
+

@@ -24,6 +24,7 @@
 #include "options.h"
 #include "sym_mgr.h"
 #include "c_glue.h"
+#include "debug.h"
 #include "tclap/CmdLine.h"
 
 int main (int argc, char **argv)
@@ -37,12 +38,12 @@ int main (int argc, char **argv)
         ccglue_parse_command_line_options(argc, argv, &opts);
     }
     catch ( TCLAP::ArgException& e ) { 
-        std::cout << "ERROR: " << e.error() << " " << e.argId() << std::endl; 
+        ////debug(0) << "ERROR: " << e.error() << " " << e.argId() << std::endl; 
     }
     
     try {
         process_cscope_files_to_build_sym_table(a_sym_table, opts.cscope_dbs);
-        std::cout << "built sym table\n";
+        ////debug(0) << "built sym table\n";
         process_cscope_files_to_build_xrefs(a_sym_table, opts.cscope_dbs);
         a_sym_table.write_xref_tag_file(opts.output_file, opts.output_index_file);
     }

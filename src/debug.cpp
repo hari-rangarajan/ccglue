@@ -1,21 +1,22 @@
-#include <stdio.h>
-#include <stdarg.h>
+// debug.cpp
 #include "debug.h"
 
-debug::debug () 
-{
-}
+nullstream null;
 
-void debug::log (const char * fmt, ...)
+std::ostream& debug(short level)
 {
+    return null;
 #if 0
-  char buffer[256];
-  va_list args;
-  va_start (args, fmt);
-  vsprintf (buffer,fmt, args);
-  va_end (args);
-  printf("%s", buffer);
+  return std::cout;
 #endif
 }
 
+std::ostream& warn()
+{
+  return std::cout << "[warn] ";
+}
 
+std::ostream& error()
+{
+  return std::cerr << "[error] ";
+}

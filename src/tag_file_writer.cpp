@@ -63,7 +63,7 @@ void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry)
 
     tagfile << a_sym_entry->get_uid() << "#" << a_sym_entry->get_n();
     
-    std::list<sym_entry *>::const_iterator   iter;
+    std::list<sym_entry_xref *>::const_iterator   iter;
 
     tagfile <<  "\t\t/^\\$/;\" ";
     
@@ -71,40 +71,21 @@ void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry)
 
     for (iter = a_sym_entry->get_c().begin(); iter != a_sym_entry->get_c().end(); iter++) {
         //compress_stream << (*iter)->get_uid() << ",";
-        tagfile << (*iter)->get_uid() << ",";
+        tagfile << (*iter)->get_sym_entry()->get_uid() << "|" 
+                << (*iter)->get_sym_entry_file()->get_uid() << "|"
+                << (*iter)->get_line_num()  << ",";
     }
     compress_stream.flush();
     tagfile << "\tp:";
 
     for (iter = a_sym_entry->get_p().begin(); iter != a_sym_entry->get_p().end(); iter++) {
         //compress_stream << (*iter)->get_uid() << ",";
-        tagfile << (*iter)->get_uid() << ",";
+        tagfile << (*iter)->get_sym_entry()->get_uid() << "|" 
+                << (*iter)->get_sym_entry_file()->get_uid() << "|"
+                << (*iter)->get_line_num()  << ",";
     }
     compress_stream.flush();
     
-    std::list<sym_entry_loc>::const_iterator   iter_loc;
-    
-
-    tagfile << "\tcl:";
-    
-    for (iter_loc = a_sym_entry->get_cl().begin(); iter_loc != a_sym_entry->get_cl().end(); iter_loc++) {
-        const sym_entry* sym_entry = (*iter_loc).get_sym_entry();
-        sym_loc_line_number_t line_num = (*iter_loc).get_line_num();
-
-        //compress_stream << sym_entry->get_uid() << "," << line_num << ",";
-        tagfile << sym_entry->get_uid() << "," << line_num << ",";
-    }
-    
-    tagfile << "\tpl:";
-    
-    for (iter_loc = a_sym_entry->get_pl().begin(); iter_loc != a_sym_entry->get_pl().end(); iter_loc++) {
-        const sym_entry* sym_entry = (*iter_loc).get_sym_entry();
-        sym_loc_line_number_t line_num = (*iter_loc).get_line_num();
-
-        //compress_stream << sym_entry->get_uid() << "," << line_num << ",";
-        tagfile << sym_entry->get_uid() << "," << line_num << ",";
-    }
-
     tagfile << '\n';
 } 
 

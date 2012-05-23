@@ -24,11 +24,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "misc_util.h"
+#include "debug.h"
 
 #include "lexertl/rules.hpp"
 #include "lexertl/state_machine.hpp"
 #include "lexertl/generator.hpp"
-#include "lexertl/file_shared_iterator.hpp"
+#include "lexertl/stream_shared_iterator.hpp"
 
 struct cscope_tag_marker_ids {
     enum {
@@ -64,22 +65,6 @@ class cscope_db_tag {
         std::string     tag_marker;
         int             tag_id;
 };
-
-#if 0
-namespace cscope_db_tag_constants {
-    const cscope_db_tag enum_type("e", cscope_tag_marker_ids::enum_type);
-    const cscope_db_tag member_def("m", cscope_tag_marker_ids::member_def);
-    const cscope_db_tag end_macro("\\)", cscope_tag_marker_ids::end_macro);
-    const cscope_db_tag begin_macro("#", cscope_tag_marker_ids::begin_macro);
-    const cscope_db_tag function_end("}", cscope_tag_marker_ids::function_end);
-    const cscope_db_tag include_file_sys("~<", cscope_tag_marker_ids::include_file);
-    const cscope_db_tag start_of_file("@", cscope_tag_marker_ids::start_of_file);
-    const cscope_db_tag function_call("`", cscope_tag_marker_ids::function_call);
-    const cscope_db_tag function_def("\\$", cscope_tag_marker_ids::function_def);
-    const cscope_db_tag include_file("~\\\"", cscope_tag_marker_ids::include_file);
-};
-#endif
-
 
 class cscope_db_tags {
     public:
@@ -117,7 +102,8 @@ cscope_db_rdr_context::cscope_db_rdr_context ():
     m_in_func(NULL),
     m_in_file(NULL),
     m_in_macro(NULL),
-    m_in_enum(NULL)
+    m_in_enum(NULL),
+    m_line_num(0)
 {
 }
 
@@ -275,42 +261,34 @@ void cscope_db_rdr::set_scan_action (int action)
 void cscope_db_rdr::process_line (sym_table& a_sym_table, std::ifstream& ifs,
         generic_db_scanner& scanner)
 {
-    unsigned int    current_line_num;
-
-    lexertl::file_shared_iterator iter (ifs);
-    lexertl::file_shared_iterator end;
-    lexertl::basic_push_match_results<lexertl::file_shared_iterator,
+#if 1
+    lexertl::stream_shared_iterator iter (ifs);
+    lexertl::stream_shared_iterator end;
+    lexertl::basic_push_match_results<lexertl::stream_shared_iterator,
 std::size_t>
       results(iter, end);
+#else
+    std::string::const_iterator iter_ = input_.begin ();
+    std::string::const_iterator end_ = input_.end ();
+    
+    lexertl::push_match_results results(iter_, end_);
 
+
+#endif
     ctxt.last_token_id = cscope_tag_marker_ids::none;
 
-    //std::cout << "processing [" << input_ << "]" << std::endl;
+    ////////debug(0) << "processing [" << input_ << "]" << std::endl;
     do
     {
         lexertl::lookup (scanner.get_state_machine(), results);
-        std::cout << "Id: " << results.id << ", Token: '" << std::string (results.start, results.end) << "'\n";
+        ////////debug(0) << "Id: " << results.id << ", Token: '" << std::string (results.start, results.end) << "'\n";
         std::string s(results.start, results.end);
         build_syms_from_token(a_sym_table, 
                 results.id, s);
     } while (results.id != 0 && results.id != results.npos ());
 
-    std::cout << "finished job!" << std::endl;
+    ////////debug(0) << "finished job!" << std::endl;
     return;
-
-    switch(m_action_type) {
-    case ACTION_LOAD_SYMS:
-        //process_token_on_line(a_sym_table, std::string(results_.start, results_.end));
-        break;
-    case ACTION_XREF_SYMS:
-        //build_xref_on_token(a_sym_table, std::string(results_.start, results_.end));
-        break;
-    default:
-        break;
-    }
-
-    return;
-
 }
 
 sym_entry* cscope_db_rdr::create_sym_entry_or_lookup (sym_table& a_sym_table, 
@@ -321,7 +299,7 @@ sym_entry* cscope_db_rdr::create_sym_entry_or_lookup (sym_table& a_sym_table,
     if (a_sym == NULL) {
         a_sym = new sym_entry(sym_text);
         a_sym_table.add_sym(a_sym);
-        std::cout << "adding symbol " << sym_text << "\n";
+        ////////debug(0) << "adding symbol " << sym_text << "\n";
     }
     return a_sym;
 }
@@ -332,14 +310,14 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
     sym_entry* ref_func;
     sym_entry* ref_file;
 
-    //std::cout << "last token id is " << ctxt.last_token_id << "\n";
+    ////////debug(0) << "last token id is " << ctxt.last_token_id << "\n";
     if (ctxt.last_token_id != cscope_tag_marker_ids::none) {
         /* we have a symbol */
         if (ctxt.m_in_macro) {
             switch (ctxt.last_token_id) {
             case cscope_tag_marker_ids::function_call:
                 ref_func = create_sym_entry_or_lookup(a_sym_table, token);
-                if (ctxt.m_in_macro && ref_func) {
+                if (ctxt.m_in_macro && ref_func && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_macro, ref_func, ctxt.m_in_file, ctxt.m_line_num);
                 }
                 break;
@@ -350,7 +328,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
             switch (ctxt.last_token_id) {
             case cscope_tag_marker_ids::function_call:
                 ref_func = create_sym_entry_or_lookup(a_sym_table, token);
-                if (ctxt.m_in_func && ref_func) {
+                if (ctxt.m_in_func && ref_func && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_func, ref_func, ctxt.m_in_file, ctxt.m_line_num);
                 }
                 break;
@@ -373,7 +351,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
                 break;
             case cscope_tag_marker_ids::include_file:
                 ref_file = create_sym_entry_or_lookup(a_sym_table,token);
-                if (ref_file && ctxt.m_in_file) {
+                if (ref_file && ctxt.m_in_file && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_file, ref_file, ctxt.m_in_file, ctxt.m_line_num);
                 }
                 break;
@@ -398,9 +376,9 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
                 if (untagged_sym == NULL) {
                     return;
                 }
-                if (ctxt.m_in_macro) {
+                if (ctxt.m_in_macro && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_macro, untagged_sym, ctxt.m_in_file, ctxt.m_line_num);
-                } else if (ctxt.m_in_func) {
+                } else if (ctxt.m_in_func && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_func, untagged_sym, ctxt.m_in_file, ctxt.m_line_num);
                 }
             }
@@ -408,7 +386,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
         case cscope_token_ids::line_number:
             {
                 ctxt.m_line_num = misc_utils::atoi<int>(token);
-                std::cout << "processing line " << ctxt.m_line_num << "\n";
+                //////debug(0) << "processing line " << ctxt.m_line_num << "\n";
             }
             break;
 
@@ -435,7 +413,8 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
         case cscope_token_ids::keyword:
             break;
         default:
-            std::cerr << "hitting a weird case " << token_type << "\n";
+            //std::cerr << "hitting a weird case " << token_type << "\n";
+            break;
         }
     }
 }

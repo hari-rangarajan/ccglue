@@ -184,7 +184,7 @@ digraph_compress_buf::int_type
     digraph_compress_buf::overflow( int_type c ) {
         traits_type::int_type   wc;
 
-        //std::cout << "coming here " << traits_type::to_char_type(c) << "\n";
+        //////debug(0) << "coming here " << traits_type::to_char_type(c) << "\n";
         if( c != traits_type::eof() ){
             if (tmp_char == '\0') {
                 if (m_map->rev_index1[c] != 0xFF) {
@@ -217,7 +217,7 @@ digraph_uncompress_buf::int_type digraph_uncompress_buf::uflow()
     tmp_char[0] = tmp_char[1];
     num_tmp--;
 
-    //std::cout << " sending " << (char) c << endl;
+    //////debug(0) << " sending " << (char) c << endl;
     return c;
 }
 
@@ -226,7 +226,7 @@ digraph_uncompress_buf::int_type
     digraph_uncompress_buf::underflow() {
         char   c;
 
-        //std::cout << " getting " << (int) s_buf.sgetc() << endl;
+        //////debug(0) << " getting " << (int) s_buf.sgetc() << endl;
         if (num_tmp == 0) {
             c = s_buf.sbumpc();
         } else {
@@ -253,9 +253,9 @@ digraph_uncompress_buf::int_type
 digraph_uncompress_buf::int_type 
     digraph_uncompress_buf::overflow( int_type c ) {
         int idx = c - 128;
-   //std::cout << "index " << idx << "\n";
+   //////debug(0) << "index " << idx << "\n";
         if (idx > 0) {
- //           std::cout << "writing " << m_map->table[idx][0] << "," << map->table[idx][1] <<  "\n";
+ //           ////debug(0) << "writing " << m_map->table[idx][0] << "," << map->table[idx][1] <<  "\n";
             s_buf.sputc(m_map->table[idx][0]);
             s_buf.sputc(m_map->table[idx][1]);
         } else {
