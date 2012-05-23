@@ -118,51 +118,42 @@ generic_db_scanner::generic_db_scanner ()
 
 void cscope_db_symbol_scanner::initialize_rules ()
 {
-    rules_.add("INITIAL", "^\\t", sm_.skip(), ">TAB_START");
+    rules_.add("INITIAL", "^\\t", sm_.skip(), "TAB_START");
 
     // g
     rules_.add("TAB_START", cscope_db_tags::global.get_tag_marker(), 
-            cscope_db_tags::global.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::global.get_tag_id(), "SYMBOL_TOKEN");
     // e
     rules_.add("TAB_START", cscope_db_tags::enum_type.get_tag_marker(), 
-            cscope_db_tags::enum_type.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::enum_type.get_tag_id(), "SYMBOL_TOKEN");
     // m
     rules_.add("TAB_START", cscope_db_tags::member_def.get_tag_marker(), 
-            cscope_db_tags::member_def.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::member_def.get_tag_id(), "SYMBOL_TOKEN");
     // @
     rules_.add("TAB_START", cscope_db_tags::start_of_file.get_tag_marker(), 
-            cscope_db_tags::start_of_file.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::start_of_file.get_tag_id(), "SYMBOL_TOKEN");
     //#
     rules_.add("TAB_START", cscope_db_tags::begin_macro.get_tag_marker(), 
-            cscope_db_tags::begin_macro.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::begin_macro.get_tag_id(), "SYMBOL_TOKEN");
     //) (end of macro)
     rules_.add("TAB_START", cscope_db_tags::end_macro.get_tag_marker(), 
-            cscope_db_tags::end_macro.get_tag_id(), "<");
+            cscope_db_tags::end_macro.get_tag_id(), "INITIAL");
     // $
     rules_.add("TAB_START", cscope_db_tags::function_def.get_tag_marker(), 
-            cscope_db_tags::function_def.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::function_def.get_tag_id(), "SYMBOL_TOKEN");
     // } (end of function)
     rules_.add("TAB_START", cscope_db_tags::function_end.get_tag_marker(), 
-            cscope_db_tags::function_end.get_tag_id(), "<");
+            cscope_db_tags::function_end.get_tag_id(), "INITIAL");
 
-    rules_.add("TAB_START", ".", sm_.skip(), ">SYMBOL_TOKEN");
-    rules_.add("SYMBOL_TOKEN", ".+", cscope_token_ids::symbol, "<");
-    rules_.add("SYMBOL_TOKEN", "\\n", sm_.skip(), "<<");
-    rules_.add("TAB_START", "\\n", sm_.skip(), "<");
+    rules_.add("TAB_START", ".", sm_.skip(), "SYMBOL_TOKEN");
+    rules_.add("SYMBOL_TOKEN", ".+", cscope_token_ids::symbol, "INITIAL");
+    rules_.add("SYMBOL_TOKEN", "\\n", sm_.skip(), "INITIAL");
+    rules_.add("TAB_START", "\\n", sm_.skip(), "INITIAL");
     
-    rules_.add("INITIAL", "^\\t", sm_.skip(), ">SYMBOL_TOKEN");
+    rules_.add("INITIAL", "^\\t", sm_.skip(), "SYMBOL_TOKEN");
     rules_.add("INITIAL", "\\n", sm_.skip(), "." );
     rules_.add("INITIAL", "^[^\\t\\n].*", sm_.skip(), "." );
 
-#if TEST
-    rules_.add("TAB_START", ".", 3001, ">SYMBOL_TOKEN");
-    rules_.add("SYMBOL_TOKEN", ".+", cscope_token_ids::symbol, "<");
-    rules_.add("SYMBOL_TOKEN", "\\n", 2001, "<<");
-    rules_.add("TAB_START", "\\n", 2002, "<");
-    rules_.add("INITIAL", "^\\t", 5001, ">SYMBOL_TOKEN");
-    rules_.add("INITIAL", "\\n", 5002, "." );
-    rules_.add("INITIAL", "^[^\\t\\n].*", 5003, "." );
-#endif
     lexertl::generator::build (rules_, sm_);
 }
 
@@ -172,50 +163,50 @@ void cscope_db_xref_scanner::initialize_rules()
     rules_.add("INITIAL", "^\\n", 1017, ".");
     rules_.add("INITIAL", "\\n", 1018, ".");
     rules_.add("INITIAL", "^\\d+", cscope_token_ids::line_number, 
-            ">LINE_NO_START");
-    rules_.add("INITIAL", "^[^\\t\\d]", ">LINE_NO_START");
-    rules_.add("INITIAL", "^\\t", sm_.skip(), ">TAB_START");
+            "LINE_NO_START");
+    rules_.add("INITIAL", "^[^\\t\\d]", "LINE_NO_START");
+    rules_.add("INITIAL", "^\\t", sm_.skip(), "TAB_START");
 
     // g
     rules_.add("TAB_START", cscope_db_tags::global.get_tag_marker(), 
-            cscope_db_tags::global.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::global.get_tag_id(), "SYMBOL_TOKEN");
     // e
     rules_.add("TAB_START", cscope_db_tags::enum_type.get_tag_marker(), 
-            cscope_db_tags::enum_type.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::enum_type.get_tag_id(), "SYMBOL_TOKEN");
     // m
     rules_.add("TAB_START", cscope_db_tags::member_def.get_tag_marker(), 
-            cscope_db_tags::member_def.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::member_def.get_tag_id(), "SYMBOL_TOKEN");
     // @
     rules_.add("TAB_START", cscope_db_tags::start_of_file.get_tag_marker(), 
-            cscope_db_tags::start_of_file.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::start_of_file.get_tag_id(), "SYMBOL_TOKEN");
     //#
     rules_.add("TAB_START", cscope_db_tags::begin_macro.get_tag_marker(), 
-            cscope_db_tags::begin_macro.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::begin_macro.get_tag_id(), "SYMBOL_TOKEN");
     // $
     rules_.add("TAB_START", cscope_db_tags::function_def.get_tag_marker(), 
-            cscope_db_tags::function_def.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::function_def.get_tag_id(), "SYMBOL_TOKEN");
     // ~ (include file ")
     rules_.add("TAB_START", cscope_db_tags::include_file.get_tag_marker(), 
-            cscope_db_tags::include_file.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::include_file.get_tag_id(), "SYMBOL_TOKEN");
     // ~< (include file sys)
     rules_.add("TAB_START", cscope_db_tags::include_file_sys.get_tag_marker(), 
-            cscope_db_tags::include_file_sys.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::include_file_sys.get_tag_id(), "SYMBOL_TOKEN");
     // ' (xref call)
     rules_.add("TAB_START", cscope_db_tags::function_call.get_tag_marker(), 
-            cscope_db_tags::function_call.get_tag_id(), ">SYMBOL_TOKEN");
+            cscope_db_tags::function_call.get_tag_id(), "SYMBOL_TOKEN");
     
     // } (end of function)
     rules_.add("TAB_START", cscope_db_tags::function_end.get_tag_marker(), 
-            cscope_db_tags::function_end.get_tag_id(), "<");
+            cscope_db_tags::function_end.get_tag_id(), "INITIAL");
     //) (end of macro)
     rules_.add("TAB_START", cscope_db_tags::end_macro.get_tag_marker(), 
-            cscope_db_tags::end_macro.get_tag_id(), "<");
-    rules_.add("TAB_START", ".", sm_.skip(), ">SYMBOL_TOKEN");
+            cscope_db_tags::end_macro.get_tag_id(), "INITIAL");
+    rules_.add("TAB_START", ".", sm_.skip(), "SYMBOL_TOKEN");
 
-    rules_.add("TAB_START", "\\n", 1017, "<");
+    rules_.add("TAB_START", "\\n", 1017, "INITIAL");
 
 
-    rules_.add("SYMBOL_TOKEN", "[^\\n]+", cscope_token_ids::symbol, "<");
+    rules_.add("SYMBOL_TOKEN", "[^\\n]+", cscope_token_ids::symbol, "INITIAL");
 
 
 #if 0
@@ -235,7 +226,7 @@ void cscope_db_xref_scanner::initialize_rules()
     }
 #endif
 
-    rules_.add("LINE_NO_START", "\\n", 1010, "<");
+    rules_.add("LINE_NO_START", "\\n", 1010, "INITIAL");
     //rules_.add("LINE_NO_START", "\\s+", 1011,  ".");
     //rules_.add("LINE_NO_START", "\\S+", 1012, ".");
     rules_.add("LINE_NO_START", "[^\\w\\n\\.]", 1012, ".");
@@ -264,7 +255,7 @@ void cscope_db_rdr::process_line (sym_table& a_sym_table, std::ifstream& ifs,
 #if 1
     lexertl::stream_shared_iterator iter (ifs);
     lexertl::stream_shared_iterator end;
-    lexertl::basic_push_match_results<lexertl::stream_shared_iterator,
+    lexertl::basic_match_results<lexertl::stream_shared_iterator,
 std::size_t>
       results(iter, end);
 #else
