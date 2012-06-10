@@ -6,6 +6,7 @@
 #include <string>
 #include "tagfilerdr.h"
 #include "misc_util.h"
+#include "debug.h"
 
 #include "lexertl/rules.hpp"
 #include "lexertl/state_machine.hpp"
@@ -123,7 +124,7 @@ struct tag_xref_data {
 
 class tag {
     public:
-        tag () {};
+        tag (){};
         tag (std::streambuf* is_it);
         void decode_from_stream (std::streambuf* s_buf, tag_file_scanner& scanner);
         void dump (std::ostream& os);
@@ -164,27 +165,30 @@ void tag::decode_compressed_list (std::string& buf,
                                 std::list<tag_xref_data>& lst, 
                                 lexertl::state_machine& sm)
 {
-    std::stringstream               oss;
-   // digraph_uncompress_buf          uncompress_buf((*s_buf.rdbuf()), 
-     //                                   digraph_maps::get_numeric_uncompress_map());
-#define TEST 1
-#if TEST
     std::stringstream               s_buf(buf);
     
-   // std::istream                    ifs(&uncompress_buf);
-    std::istream                    ifs(s_buf.rdbuf());
+    digraph_uncompress_buf          uncompress_buf((*s_buf.rdbuf()), 
+                                       digraph_maps::get_numeric_uncompress_map());
+    std::iostream                    ifs(&uncompress_buf);
+
+    std::string uncompress_csv;
+
+    ifs >> uncompress_csv;
+
+
+#if 0
+    //std::istream                    ifs(s_buf.rdbuf());
     lexertl::stream_shared_iterator   iter (ifs);
     lexertl::stream_shared_iterator   end;
     lexertl::basic_match_results<lexertl::stream_shared_iterator, std::size_t> 
                                                                 results(iter, end);
 
-#else
-    std::string::const_iterator iter_ = buf.begin();
-    std::string::const_iterator end_ = buf.end ();
-    lexertl::match_results results (iter_, end_);
 #endif
+    std::string::const_iterator iter_ = uncompress_csv.begin();
+    std::string::const_iterator end_ = uncompress_csv.end ();
+    lexertl::match_results results (iter_, end_);
 
-    int last_token  = sym_xref_ids::none;
+    last_token_id  = sym_xref_ids::none;
     tag_xref_data   xref_data;
 
     enum {
@@ -199,7 +203,7 @@ void tag::decode_compressed_list (std::string& buf,
     {
         lexertl::lookup (sm, results);
         std::string s(results.start, results.end);
-        //std::cout << "sym_xref Id: " << results.id << ", Token: '" << s << "'\n";
+        debug(0) << "sym_xref Id: " << results.id << ", Token: '" << s << "'\n";
         switch (results.id) {
         case sym_xref_ids::numeric_data:
             switch (expected_token) {
@@ -240,10 +244,10 @@ void tag::decode_compressed_list (std::string& buf,
 
     return;
 #if 0
-    //std::cout << "STart "  << std::endl;
+    //debug(0) << "STart "  << std::endl;
     while (is_it != eos) {
         c = *is_it;
-        //std::cout << " : " << c << std::endl;
+        //debug(0) << " : " << c << std::endl;
         if (c == '\t' || c == '\n') {
             /* end of list */
             return;
@@ -259,7 +263,7 @@ void tag::decode_compressed_list (std::string& buf,
         }
         is_it++;
     }
-    //std::cout << "Done " << c << std::endl;
+    //debug(0) << "Done " << c << std::endl;
 #endif
 }
 
@@ -292,7 +296,7 @@ std::size_t>
     {
         lexertl::lookup (scanner.get_state_machine(), results);
         std::string s(results.start, results.end);
-        //std::cout << "Id: " << results.id << ", Token: '" << s << "'\n";
+        debug(0) << "Id: " << results.id << ", Token: '" << s << "'\n";
         process_decoded_token(results.id, s);
     } while (results.id != 0 && results.id != results.npos ());
 }
@@ -429,7 +433,7 @@ void tag_db::dmp_all ()
     indexed_ifstream_vector<int>::iterator iter(&ifs_db);
 
     for (iter= ifs_db.begin(); iter != ifs_db.end(); iter++) {
-        std::cout << *iter << " <<\n";
+        debug(0) << *iter << " <<\n";
     }
 }
 
@@ -470,13 +474,13 @@ bool my_dummy_func (std::streambuf* s_buf, const std::string& s)
     s_buf->pubseekoff(sizeof(index_record_t), std::ios::cur);
     
 #if 0
-    std::cout << "starting\n";
+    debug(0) << "starting\n";
     while (sbuf_it != sbuf_end) {
-        std::cout << *sbuf_it;
+        debug(0) << *sbuf_it;
         sbuf_it++;
     }
 
-    std::cout << "\n";
+    debug(0) << "\n";
     
     return false;
 #endif
@@ -507,7 +511,7 @@ tag* tag_db::get_tag_line (std::string tag_name)
 {
     indexed_ifstream_vector<int>::iterator it = lower_bound(ifs_db.begin(), ifs_db.end(), tag_name, 
             my_dummy_func);
-    //std::cout << "Found "<< it - ifs_db.begin();
+    //debug(0) << "Found "<< it - ifs_db.begin();
     std::streambuf*  buf = *it;
     return get_tag_from_stream(buf);
 }

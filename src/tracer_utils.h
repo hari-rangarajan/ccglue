@@ -107,6 +107,8 @@ symbol_tracer::symbol_tracer (tag_db *t_db):
 void symbol_tracer::do_trace (symbol_tree* s_tree, const tag* atag,
         int direction, int current_depth, int max_depth)
 {
+    debug(0) << "tracing symbol " << atag->get_symbol_name() << " direction: " <<
+        direction << " depth: " << current_depth << "\n";
 
     const std::list<tag_xref_data>& node_list
                                     = atag->get_list_by_direction(direction);
@@ -142,7 +144,7 @@ symbol_tree* symbol_tracer::do_query (const symbol_trace_query& query)
         delete atag;
         return NULL;
     }
-    std::string unknown("unknown");
+    std::string unknown("");
     std::string a(atag->get_symbol_name());
 
     symbol_tree *s_root_tree = new symbol_tree(tree_node(a, unknown, 0));

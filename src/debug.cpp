@@ -1,13 +1,15 @@
 // debug.cpp
 #include "debug.h"
+#include "../config.h"
 
 nullstream null;
 
 std::ostream& debug(short level)
 {
-    return null;
 #if 0
-  return std::cout;
+    return std::cout;
+#else 
+    return null;
 #endif
 }
 

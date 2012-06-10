@@ -32,11 +32,16 @@
 #include "digraph.h"
 #include <string.h>
 #include <iostream>
+#include "debug.h"
 
 void digraph_utils::build_char_compress_map (digraph_compress_map_t *map, 
         const char* seq1, const char* seq2)
 {
     int i,j, idx = 128;
+            
+    debug(0)  << "Building compressed table for " <<
+              "seq1: " << seq1 <<
+              "seq2: " << seq2 << "\n";
 
     memset(map, -1, sizeof(digraph_compress_map_t));
     /* build reverse indexes */
@@ -48,6 +53,10 @@ void digraph_utils::build_char_compress_map (digraph_compress_map_t *map,
     }
     for(i=0; i<strlen(seq1); i++) {
         for (j=0; j<strlen(seq2); j++) {
+            debug(0) << "Assigning id " << idx <<
+                " sym1: " << seq1[i] <<
+                " sym2: " << seq2[j] << "\n";
+
             map->table[i][j] =  idx++;
         }
     }
@@ -125,7 +134,7 @@ void digraph_utils::uncompress_string_with_map (digraph_uncompress_map_t *map,
     *uncmpstr = '\0';
 }
         
-const char* digraph_maps::numseq1 = ",0123456789";
+const char* digraph_maps::numseq1 = "|0123456789";
 const char* digraph_maps::numseq2 = ",0123456789";
 const char* digraph_maps::charseq1 = " teisaprnl(of)=c";
 const char* digraph_maps::charseq2 = " tnerpla";
@@ -184,21 +193,36 @@ digraph_compress_buf::int_type
     digraph_compress_buf::overflow( int_type c ) {
         traits_type::int_type   wc;
 
-        //////debug(0) << "coming here " << traits_type::to_char_type(c) << "\n";
+        debug(0) << "coming here " << traits_type::to_char_type(c) << "\n";
         if( c != traits_type::eof() ){
             if (tmp_char == '\0') {
                 if (m_map->rev_index1[c] != 0xFF) {
                     tmp_char = c;
                 } else {
+                    debug(0) << "\t\t\twriting_ " << c << "\n";
                     s_buf.sputc(traits_type::to_char_type(c));
                     tmp_char = '\0';
                 }
             } else {
-                c = m_map->table[m_map->rev_index1[tmp_char]]
-                    [m_map->rev_index2[c]];
-                s_buf.sputc(traits_type::to_char_type(c));
-                //std:cout << "\t\t\tcompressing " << c << "\n";
-                tmp_char = '\0';
+                if (m_map->rev_index2[c] == 0xFF) {
+                    s_buf.sputc(traits_type::to_char_type(tmp_char));
+                    s_buf.sputc(traits_type::to_char_type(c));
+                    debug(0) << "\t\t\twriting__" << tmp_char << " and " << c << "\n";
+                    tmp_char = '\0';
+                } else {
+                    wc = m_map->table[m_map->rev_index1[tmp_char]]
+                        [m_map->rev_index2[c]];
+                    debug(0) << "\t\t\tlookup " << wc << "\n";
+                    if (wc == 0xFF) {
+                        debug(0) << "\t\t\twriting " << tmp_char << "\n";
+                        s_buf.sputc(traits_type::to_char_type(tmp_char));
+                        tmp_char = c;
+                    } else {
+                        s_buf.sputc(traits_type::to_char_type(wc));
+                        debug(0) << "\t\t\tcompressing " << wc << "\n";
+                        tmp_char = '\0';
+                    }
+                }
             }
         }
     return c;
@@ -217,16 +241,16 @@ digraph_uncompress_buf::int_type digraph_uncompress_buf::uflow()
     tmp_char[0] = tmp_char[1];
     num_tmp--;
 
-    //////debug(0) << " sending " << (char) c << endl;
+    debug(0) << "\t\t\tsending " << (char) c << endl;
     return c;
 }
 
 
 digraph_uncompress_buf::int_type 
     digraph_uncompress_buf::underflow() {
-        char   c;
+        traits_type::int_type c;
 
-        //////debug(0) << " getting " << (int) s_buf.sgetc() << endl;
+        debug(0) << " getting " << (int) s_buf.sgetc() << " :: ";
         if (num_tmp == 0) {
             c = s_buf.sbumpc();
         } else {

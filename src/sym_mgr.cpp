@@ -61,7 +61,7 @@ uint32 sym_table::get_new_id ()
 
 bool sym_table::add_sym (sym_entry* a_sym_entry)
 {
-    //debug::log("Adding %s on ???\n", a_sym_entry->get_n().c_str());
+    debug(0) << "Adding " << a_sym_entry->get_n().c_str() << "\n";
 
     //m_hash_names.insert(std::tr1::unordered_map<const char *,sym_entry *>::
       //      value_type(a_sym_entry->get_n().c_str(), a_sym_entry));
@@ -120,12 +120,12 @@ void sym_table::uncompress_symbol_names ()
     std::iostream            uncompress_stream(&uncompress_buf);
     
     for (iter = m_array_sym.begin(); iter != m_array_sym.end(); iter++) {
-        ////debug(0) << "uncompressing " << (*iter)->get_n();
-        tmp_sstream.str((*iter)->get_n());
+        debug(0) << "uncompressing " << (*iter)->get_n();
         uncompress_stream.clear();
+        tmp_sstream.str((*iter)->get_n());
         //uncompress_stream >> test;
         uncompress_stream >> (*iter)->m_n;
-        ////debug(0) << " to " << (*iter)->get_n() <<std::endl;
+        debug(0) << " to \t\t\t\t\t\t" << (*iter)->get_n() <<std::endl;
     }
 }
 
@@ -136,6 +136,7 @@ void sym_table::assign_unique_ids_to_symbols ()
 
     for (iter = m_array_sym.begin(); iter != m_array_sym.end(); iter++) {
         (*iter)->m_uid = get_new_id();
+        debug(0) << "assigning " << (*iter)->get_n() << " to " << (*iter)->get_uid() <<"\n";
     }
 }
  
@@ -184,12 +185,10 @@ void sym_table::write_syms_as_tags_to_file_with_idx (tag_file_writer& file,
         fbs.seekp(idx_fpos_start, std::ios::beg);
         fbs.write(reinterpret_cast<char *>(&rec), sizeof(index_record_t));
         fbs.seekp(idx_fpos_end, std::ios::beg);
-#if 0
-        ////debug(0) << "writing " << (*iter)->get_n() << "size " <<
+        debug(0) << "writing " << (*iter)->get_n() << "size " <<
             idx_fpos_end - idx_fpos_start << 
             " start " << idx_fpos_start <<
             " end " << idx_fpos_end << std::endl;
-#endif
         idx_file.end_record();
     }
     idx_file.write_index_to_file();
@@ -219,9 +218,9 @@ void sym_entry::mark_p (sym_entry *p, sym_entry* file,
         sym_loc_line_number_t line_num)
 {
     m_p.push_back(new sym_entry_xref(p, file, line_num));
-    ////debug(0) << "marking " << p->get_n() << " as parent of " <<
-        //this->get_n() << " at " << file->get_n() << " on line " <<
-        //line_num << "\n";
+    debug(0) << "marking " << p->get_n() << " as parent of " <<
+        this->get_n() << " at " << file->get_n() << " on line " <<
+        line_num << "\n";
 
 }
 
@@ -229,9 +228,9 @@ void sym_entry::mark_c (sym_entry *c, sym_entry *file,
         sym_loc_line_number_t line_num) 
 {
     m_c.push_back(new sym_entry_xref(c, file, line_num));
-    ////debug(0) << "marking " << c->get_n() << " as child of " <<
-       // this->get_n() << " at " << file->get_n() << " on line " <<
-        //line_num << "\n";
+    debug(0) << "marking " << c->get_n() << " as child of " <<
+        this->get_n() << " at " << file->get_n() << " on line " <<
+        line_num << "\n";
 }
 
 							

@@ -10,6 +10,8 @@
 #include "tag_file_writer.h"
 #include "indexed_fstream.h"
 #include <functional>
+#include "fsballocator/FSBAllocator.hh"
+#include <utility>
 
 class sym_table;
 class tag_file_writer;
@@ -39,6 +41,11 @@ struct elf_hash_32bit : std::unary_function< const char *, std::size_t >
 
 //typedef std::tr1::unordered_map<const char *, sym_entry*, elf_hash_32bit> hash_map_sym;
 typedef std::tr1::unordered_map<std::string , sym_entry*> hash_map_sym;
+#if 0
+typedef std::tr1::unordered_map <std::string , sym_entry*, 
+        std::tr1::hash<std::string>, std::equal_to<std::string>, 
+        FSBAllocator2< std::pair <const std::string, sym_entry*> > >  hash_map_sym;
+#endif
 
 typedef unsigned int sym_loc_line_number_t;
 
@@ -85,12 +92,15 @@ class sym_entry_xref {
         sym_loc_line_number_t           m_line_num;
 };
 
+typedef std::list<sym_entry_xref*, FSBAllocator<sym_entry_xref *> > 
+                    sym_entry_xref_list;
+
 class sym_entry {
     protected:
 	uint32                      m_uid;
 	std::string                 m_n;
-        std::list<sym_entry_xref *>      m_p;
-        std::list<sym_entry_xref *>      m_c;
+        sym_entry_xref_list         m_p;
+        sym_entry_xref_list         m_c;
 	
     public:
         sym_entry (const char *name);
@@ -98,8 +108,8 @@ class sym_entry {
         ~sym_entry ();
         uint32 get_uid() const {return m_uid;};
         const std::string& get_n() const {return m_n;};
-        const std::list<sym_entry_xref *>& get_p() const {return m_p;};
-        const std::list<sym_entry_xref *>& get_c() const {return m_c;};
+        const sym_entry_xref_list& get_p() const {return m_p;};
+        const sym_entry_xref_list& get_c() const {return m_c;};
         void mark_c (sym_entry *c, sym_entry *file, 
                                     sym_loc_line_number_t line_num);
         void mark_p (sym_entry *c, sym_entry *file, 

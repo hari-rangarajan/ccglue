@@ -10,7 +10,6 @@
 
 #include "lexertl/rules.hpp"
 #include "lexertl/state_machine.hpp"
-#include "lexertl/file_shared_iterator.hpp"
 #include "lexertl/generator.hpp"
 #include "lexertl/lookup.hpp"
 

@@ -7,6 +7,9 @@
 /* define if the library defines strstream */
 #define HAVE_CLASS_STRSTREAM 1
 
+/* Define to 1 if you have the `getpagesize' function. */
+#define HAVE_GETPAGESIZE 1
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
@@ -15,6 +18,9 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
+
+/* Define to 1 if you have a working `mmap' system call. */
+#define HAVE_MMAP 1
 
 /* define to 1 if the compiler implements namespaces */
 #define HAVE_NAMESPACES 1
@@ -36,6 +42,9 @@
 
 /* Define to 1 if you have the <strstream> header file. */
 #define HAVE_STRSTREAM 1
+
+/* Define to 1 if you have the <sys/param.h> header file. */
+#define HAVE_SYS_PARAM_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1

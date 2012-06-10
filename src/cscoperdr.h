@@ -29,7 +29,7 @@ class generic_db_scanner {
 
 class generic_db_rdr {
     public:
-        virtual void process_line (sym_table&, std::ifstream&, generic_db_scanner&) = 0;
+        virtual void process_lines(sym_table& , const char* , int , generic_db_scanner& )=0;
 };
 
 class cscope_db_rdr_context {
@@ -63,11 +63,13 @@ class cscope_db_rdr: public generic_db_rdr {
     public:
         cscope_db_rdr();
         ~cscope_db_rdr();
-        void process_line (sym_table& a_sym_table, std::ifstream& ifs, generic_db_scanner& scanner);
+        void process_lines (sym_table& a_sym_table, const char* data,
+                int size, generic_db_scanner& scanner);
         void build_sym_table(sym_table&, char* line);
         void build_xref(sym_table&, char* line);
         void build_xref_on_token(sym_table&, std::string&);
-        void build_syms_from_token (sym_table& a_sym_table, long unsigned int token_type, std::string& token);
+        bool build_syms_from_token (sym_table& a_sym_table, 
+                    long unsigned int token_type, std::string& token);
         void process_token_on_line(sym_table&, std::string&);
         void set_scan_action(int action);
         sym_entry* create_sym_entry_or_lookup (sym_table&,

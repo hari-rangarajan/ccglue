@@ -56,7 +56,6 @@ void tag_file_writer::write_xref_tag_header ()
 void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry) 
 {
     std::stringstream       sstream;
-
     digraph_compress_buf    compress_buf(*(tagfile.rdbuf()),
                                            digraph_maps::get_numeric_compress_map());
     std::ostream            compress_stream(&compress_buf);
@@ -70,8 +69,9 @@ void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry)
     tagfile << "\tc:";
 
     for (iter = a_sym_entry->get_c().begin(); iter != a_sym_entry->get_c().end(); iter++) {
-        //compress_stream << (*iter)->get_uid() << ",";
-        tagfile << (*iter)->get_sym_entry()->get_uid() << "|" 
+        compress_stream 
+        //tagfile
+                << (*iter)->get_sym_entry()->get_uid() << "|" 
                 << (*iter)->get_sym_entry_file()->get_uid() << "|"
                 << (*iter)->get_line_num()  << ",";
     }
@@ -79,8 +79,9 @@ void tag_file_writer::write_sym_as_tag (sym_entry *a_sym_entry)
     tagfile << "\tp:";
 
     for (iter = a_sym_entry->get_p().begin(); iter != a_sym_entry->get_p().end(); iter++) {
-        //compress_stream << (*iter)->get_uid() << ",";
-        tagfile << (*iter)->get_sym_entry()->get_uid() << "|" 
+        compress_stream 
+        //tagfile 
+                << (*iter)->get_sym_entry()->get_uid() << "|" 
                 << (*iter)->get_sym_entry_file()->get_uid() << "|"
                 << (*iter)->get_line_num()  << ",";
     }

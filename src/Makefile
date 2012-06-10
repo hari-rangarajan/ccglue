@@ -52,7 +52,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_ccglue_OBJECTS = options.$(OBJEXT) cscoperdr.$(OBJEXT) \
 	sym_mgr.$(OBJEXT) digraph.$(OBJEXT) main.$(OBJEXT) \
 	c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) misc_util.$(OBJEXT) \
-	debug.$(OBJEXT)
+	debug.$(OBJEXT) memory_file.$(OBJEXT)
 ccglue_OBJECTS = $(am_ccglue_OBJECTS)
 ccglue_LDADD = $(LDADD)
 am_ccglue_tracer_OBJECTS = tracer_options.$(OBJEXT) tracer.$(OBJEXT) \
@@ -79,6 +79,10 @@ AUTOCONF = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run aut
 AUTOHEADER = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run automake-1.11
 AWK = mawk
+CC = gcc
+CCDEPMODE = depmode=gcc3
+CFLAGS = -g -O2
+CPP = gcc -E
 CPPFLAGS = 
 CXX = g++
 CXXCPP = g++ -E
@@ -121,6 +125,7 @@ abs_builddir = /home/tux/myprojects/ccglue/git-ver/src
 abs_srcdir = /home/tux/myprojects/ccglue/git-ver/src
 abs_top_builddir = /home/tux/myprojects/ccglue/git-ver
 abs_top_srcdir = /home/tux/myprojects/ccglue/git-ver
+ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
 am__leading_dot = .
@@ -159,8 +164,8 @@ target_alias =
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
-ccglue_SOURCES = options.cpp cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp misc_util.cpp debug.cpp
-ccglue_tracer_SOURCES = tracer_options.cpp tracer.cpp digraph.cpp debug.cpp
+ccglue_SOURCES = options.cpp cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp misc_util.cpp debug.cpp memory_file.cpp
+ccglue_tracer_SOURCES = tracer_options.cpp tracer.cpp digraph.cpp debug.cpp 
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 all: all-am
 
@@ -251,6 +256,7 @@ include ./$(DEPDIR)/cscoperdr.Po
 include ./$(DEPDIR)/debug.Po
 include ./$(DEPDIR)/digraph.Po
 include ./$(DEPDIR)/main.Po
+include ./$(DEPDIR)/memory_file.Po
 include ./$(DEPDIR)/misc_util.Po
 include ./$(DEPDIR)/options.Po
 include ./$(DEPDIR)/sym_mgr.Po

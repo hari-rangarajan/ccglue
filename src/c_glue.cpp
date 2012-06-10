@@ -20,6 +20,7 @@
  *
  */
 
+#include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,25 +29,45 @@
 #include "typedefs.h"
 #include "sym_mgr.h"
 #include "cscoperdr.h"
+#include "lexertl/memory_file.hpp"
 
 void process_files_with_reader (generic_db_rdr& reader, sym_table& a_sym_table, 
         std::vector<std::string>& db_files, generic_db_scanner& scanner)
 {
-    std::ifstream                       db_file;
     std::vector<std::string>::iterator  it;
+    const char*                         buffer;
+    int                                 size;
 
     /* need to copy before we try tokenizing */
     for (it = db_files.begin(); it < db_files.end(); it++) {
+#ifdef HAVE_MMAP
+        lexertl::memory_file source_mf((*it).c_str());
+        buffer = source_mf.data();
+        size = source_mf.size();
+
+        //lexertl::basic_match_results<const char *> results(source_mf.data(), source_mf.data() + source_mf.size());
+#else
+        std::ifstream                       db_file;
+
         db_file.open((*it).c_str(), std::ios::in);
         if (db_file.fail()) {
             throw std::runtime_error("Failed to open " + *it);
         }
-        reader.process_line(a_sym_table, db_file, scanner);
+        std::string str_((std::istreambuf_iterator<char>(db_file)),
+                std::istreambuf_iterator<char>());
         db_file.close();
+
+        buffer = str_.c_str();
+        size = str_.size();
+
+        //lexertl::basic_match_results<const char *> results(str_.c_str(), str_.c_str() + str_.size());
+        //lexertl::match_results results(str_.begin(),   str_.end());
+#endif
+        reader.process_lines(a_sym_table, buffer, size, scanner);
     }
     return;
 }
-    
+
 
 RC_t process_cscope_files_to_build_sym_table (sym_table& a_sym_table, 
         std::vector<std::string>& cscope_files)

@@ -25,6 +25,7 @@
 #include <string.h>
 #include "misc_util.h"
 #include "debug.h"
+#include "memory_file.hpp"
 
 #include "lexertl/rules.hpp"
 #include "lexertl/state_machine.hpp"
@@ -249,23 +250,12 @@ void cscope_db_rdr::set_scan_action (int action)
     m_action_type = action;
 }
 
-void cscope_db_rdr::process_line (sym_table& a_sym_table, std::ifstream& ifs,
+
+void cscope_db_rdr::process_lines (sym_table& a_sym_table, const char* data, int size,
         generic_db_scanner& scanner)
 {
-#if 1
-    lexertl::stream_shared_iterator iter (ifs);
-    lexertl::stream_shared_iterator end;
-    lexertl::basic_match_results<lexertl::stream_shared_iterator,
-std::size_t>
-      results(iter, end);
-#else
-    std::string::const_iterator iter_ = input_.begin ();
-    std::string::const_iterator end_ = input_.end ();
-    
-    lexertl::push_match_results results(iter_, end_);
+    lexertl::basic_match_results<const char *> results(data, data+size);
 
-
-#endif
     ctxt.last_token_id = cscope_tag_marker_ids::none;
 
     ////////debug(0) << "processing [" << input_ << "]" << std::endl;
@@ -273,9 +263,10 @@ std::size_t>
     {
         lexertl::lookup (scanner.get_state_machine(), results);
         ////////debug(0) << "Id: " << results.id << ", Token: '" << std::string (results.start, results.end) << "'\n";
-        std::string s(results.start, results.end);
-        build_syms_from_token(a_sym_table, 
-                results.id, s);
+        std::string& s = *new std::string(results.start, results.end);
+        if (build_syms_from_token(a_sym_table, results.id, s) == false) {
+            delete &s;
+        }
     } while (results.id != 0 && results.id != results.npos ());
 
     ////////debug(0) << "finished job!" << std::endl;
@@ -295,11 +286,12 @@ sym_entry* cscope_db_rdr::create_sym_entry_or_lookup (sym_table& a_sym_table,
     return a_sym;
 }
 
-void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned int token_type, std::string& token)
+bool cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned int token_type, std::string& token)
 {
     sym_entry* untagged_sym;
     sym_entry* ref_func;
     sym_entry* ref_file;
+    bool consumed = false;
 
     ////////debug(0) << "last token id is " << ctxt.last_token_id << "\n";
     if (ctxt.last_token_id != cscope_tag_marker_ids::none) {
@@ -311,6 +303,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
                 if (ctxt.m_in_macro && ref_func && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_macro, ref_func, ctxt.m_in_file, ctxt.m_line_num);
                 }
+                consumed = true;
                 break;
             default:
                 break;
@@ -322,12 +315,14 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
                 if (ctxt.m_in_func && ref_func && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_func, ref_func, ctxt.m_in_file, ctxt.m_line_num);
                 }
+                consumed = true;
                 break;
             case cscope_tag_marker_ids::function_end:
                 ctxt.m_in_func = NULL;
                 break;
             case cscope_tag_marker_ids::begin_macro:
                 ctxt.m_in_macro = create_sym_entry_or_lookup(a_sym_table, token);
+                consumed = true;
                 break;
             default:
                 break;
@@ -336,15 +331,18 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
             switch (ctxt.last_token_id) {
             case cscope_tag_marker_ids::function_def: 
                 ctxt.m_in_func = create_sym_entry_or_lookup(a_sym_table,token);
+                consumed = true;
                 break;
             case cscope_tag_marker_ids::begin_macro: 
                 ctxt.m_in_macro = create_sym_entry_or_lookup(a_sym_table,token);
+                consumed = true;
                 break;
             case cscope_tag_marker_ids::include_file:
                 ref_file = create_sym_entry_or_lookup(a_sym_table,token);
                 if (ref_file && ctxt.m_in_file && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_file, ref_file, ctxt.m_in_file, ctxt.m_line_num);
                 }
+                consumed = true;
                 break;
             case cscope_tag_marker_ids::start_of_file:
                 if (token[0] != '\0') {
@@ -353,6 +351,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
                 break;
             case cscope_tag_marker_ids::global:
                 create_sym_entry_or_lookup(a_sym_table,token);
+                consumed = true;
                 break;
             default:
                 break;
@@ -365,7 +364,7 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
             {
                 untagged_sym = a_sym_table.lookup(token);
                 if (untagged_sym == NULL) {
-                    return;
+                    return false;
                 }
                 if (ctxt.m_in_macro && ctxt.m_line_num) {
                     a_sym_table.mark_xref(ctxt.m_in_macro, untagged_sym, ctxt.m_in_file, ctxt.m_line_num);
@@ -408,4 +407,5 @@ void cscope_db_rdr::build_syms_from_token (sym_table& a_sym_table, long unsigned
             break;
         }
     }
+    return consumed;
 }
