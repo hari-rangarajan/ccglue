@@ -16,10 +16,10 @@
 
 
 
-pkgdatadir = $(datadir)/
-pkgincludedir = $(includedir)/
-pkglibdir = $(libdir)/
-pkglibexecdir = $(libexecdir)/
+pkgdatadir = $(datadir)/ccglue
+pkgincludedir = $(includedir)/ccglue
+pkglibdir = $(libdir)/ccglue
+pkglibexecdir = $(libexecdir)/ccglue
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
@@ -52,7 +52,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_ccglue_OBJECTS = options.$(OBJEXT) cscoperdr.$(OBJEXT) \
 	sym_mgr.$(OBJEXT) digraph.$(OBJEXT) main.$(OBJEXT) \
 	c_glue.$(OBJEXT) tag_file_writer.$(OBJEXT) misc_util.$(OBJEXT) \
-	debug.$(OBJEXT) memory_file.$(OBJEXT)
+	debug.$(OBJEXT)
 ccglue_OBJECTS = $(am_ccglue_OBJECTS)
 ccglue_LDADD = $(LDADD)
 am_ccglue_tracer_OBJECTS = tracer_options.$(OBJEXT) tracer.$(OBJEXT) \
@@ -68,6 +68,10 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(ccglue_SOURCES) $(ccglue_tracer_SOURCES)
 DIST_SOURCES = $(ccglue_SOURCES) $(ccglue_tracer_SOURCES)
 ETAGS = etags
@@ -79,13 +83,13 @@ AUTOCONF = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run aut
 AUTOHEADER = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run automake-1.11
 AWK = mawk
-CC = gcc
+CC = x86_64-w64-mingw32-gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
-CPP = gcc -E
+CPP = x86_64-w64-mingw32-gcc -E
 CPPFLAGS = 
-CXX = g++
-CXXCPP = g++ -E
+CXX = x86_64-w64-mingw32-g++
+CXXCPP = x86_64-w64-mingw32-g++ -E
 CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -fno-rtti -O2
 CYGPATH_W = echo
@@ -95,7 +99,7 @@ ECHO_C =
 ECHO_N = -n
 ECHO_T = 
 EGREP = /bin/grep -E
-EXEEXT = 
+EXEEXT = .exe
 GREP = /bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
@@ -109,24 +113,24 @@ LTLIBOBJS =
 MAKEINFO = ${SHELL} /home/tux/myprojects/ccglue/git-ver/config/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
-PACKAGE = 
-PACKAGE_BUGREPORT = 
-PACKAGE_NAME = 
-PACKAGE_STRING = 
-PACKAGE_TARNAME = 
+PACKAGE = ccglue
+PACKAGE_BUGREPORT = hariranga@sourceforge.users.net
+PACKAGE_NAME = ccglue
+PACKAGE_STRING = ccglue 0.6.0
+PACKAGE_TARNAME = ccglue
 PACKAGE_URL = 
-PACKAGE_VERSION = 
+PACKAGE_VERSION = 0.6.0
 PATH_SEPARATOR = :
 SET_MAKE = 
 SHELL = /bin/bash
-STRIP = 
-VERSION = 
+STRIP = x86_64-w64-mingw32-strip
+VERSION = 0.6.0
 abs_builddir = /home/tux/myprojects/ccglue/git-ver/src
 abs_srcdir = /home/tux/myprojects/ccglue/git-ver/src
 abs_top_builddir = /home/tux/myprojects/ccglue/git-ver
 abs_top_srcdir = /home/tux/myprojects/ccglue/git-ver
-ac_ct_CC = gcc
-ac_ct_CXX = g++
+ac_ct_CC = 
+ac_ct_CXX = 
 am__include = include
 am__leading_dot = .
 am__quote = 
@@ -137,10 +141,10 @@ build_alias =
 builddir = .
 datadir = ${datarootdir}
 datarootdir = ${prefix}/share
-docdir = ${datarootdir}/doc/${PACKAGE}
+docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
-host_alias = 
+host_alias = x86_64-w64-mingw32
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
@@ -164,8 +168,8 @@ target_alias =
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
-ccglue_SOURCES = options.cpp cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp misc_util.cpp debug.cpp memory_file.cpp
-ccglue_tracer_SOURCES = tracer_options.cpp tracer.cpp digraph.cpp debug.cpp 
+ccglue_SOURCES = options.cpp cscoperdr.cpp sym_mgr.cpp digraph.cpp main.cpp c_glue.cpp  tag_file_writer.cpp misc_util.cpp  debug.cpp c_glue.h     digraph.h          options.h  tracer_options.h cscoperdr.h  indexed_fstream.h  sym_mgr.h  tag_file_writer.h  debug.h      misc_util.h        typedefs.h indexed_fstream.hpp
+ccglue_tracer_SOURCES = tracer_options.cpp tracer.cpp digraph.cpp debug.cpp  tracer_options.h tag_db.h tracer_utils.h tracer.h tagfilerdr.h
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 all: all-am
 
@@ -256,7 +260,6 @@ include ./$(DEPDIR)/cscoperdr.Po
 include ./$(DEPDIR)/debug.Po
 include ./$(DEPDIR)/digraph.Po
 include ./$(DEPDIR)/main.Po
-include ./$(DEPDIR)/memory_file.Po
 include ./$(DEPDIR)/misc_util.Po
 include ./$(DEPDIR)/options.Po
 include ./$(DEPDIR)/sym_mgr.Po

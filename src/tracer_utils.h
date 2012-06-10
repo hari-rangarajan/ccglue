@@ -144,7 +144,7 @@ symbol_tree* symbol_tracer::do_query (const symbol_trace_query& query)
         delete atag;
         return NULL;
     }
-    std::string unknown("");
+    std::string unknown("GLOBAL_SYMBOL_REF");
     std::string a(atag->get_symbol_name());
 
     symbol_tree *s_root_tree = new symbol_tree(tree_node(a, unknown, 0));

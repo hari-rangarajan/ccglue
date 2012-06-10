@@ -25,7 +25,7 @@
 #include <string.h>
 #include "misc_util.h"
 #include "debug.h"
-#include "memory_file.hpp"
+#include "lexertl/memory_file.hpp"
 
 #include "lexertl/rules.hpp"
 #include "lexertl/state_machine.hpp"

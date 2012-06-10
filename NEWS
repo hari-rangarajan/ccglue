@@ -13,3 +13,13 @@ Introducing the ccglue_tracer utility that can dump call-tree
 output to the terminal. Allows usage outside Vim and possible
 reprocessing of call-trees to other applications.
 
+June 9, 2012 Hari Rangarajan (harirangar@sourceforge.users.net)
+The tracer functionality has been expanded to include the location
+of the symbol (i.e., filename, linenumber)
+Internal changes include
+* Using Ben Hanson's lexerTL C++ library to parse the cscope database
+    - Parsing now happens with a memory mapped file if the OS has support
+* Using the FSB allocator to speedup data structure maintenance 
+(missing support for unordered_tree, adding it creates a double-free, 
+ look at it later)
+

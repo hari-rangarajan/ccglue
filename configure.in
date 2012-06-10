@@ -1,9 +1,13 @@
 PACKAGE=ccglue
-VERSION=0.4.0
-AC_INIT(src/main.cpp)
+VERSION=0.6.0
+AUTHOR=hariranga@sourceforge.users.net
+
+AC_INIT(ccglue, 0.6.0, hariranga@sourceforge.users.net)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_SRCDIR(src/main.cpp)
+AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE
+
 
 # borrowed from http://ubuntuforums.org/showthread.php?t=1556520
 # prevent setting xFLAGS to default of -g -O2
@@ -28,5 +32,6 @@ AC_CXX_HAVE_SSTREAM
 AC_CXX_HAVE_STRSTREAM
 AC_CXX_HAVE_LONG_LONG
 AC_PROG_INSTALL
-AC_OUTPUT(Makefile src/Makefile doc/Makefile)
+AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
+AC_OUTPUT
 
